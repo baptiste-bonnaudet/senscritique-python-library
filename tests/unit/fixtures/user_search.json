@@ -1,0 +1,38 @@
+{
+ "data": {
+  "searchUserExplorer": {
+   "total": 128,
+   "items": [
+    {
+     "id": 105078,
+     "title": "Sergent_Pepper",
+     "subname": "",
+     "url": "https://www.senscritique.com/Sergent_Pepper",
+     "avatar": "https://media.senscritique.com/media/000007703024/100x100/Sergent_Pepper.jpg",
+     "followers_count": 17502,
+     "rating_count": 11289,
+     "user": {
+      "username": "Sergent_Pepper"
+     }
+    },
+    {
+     "id": 131942,
+     "title": "Sergent-Steiner",
+     "subname": "",
+     "url": "https://www.senscritique.com/Sergent-Steiner",
+     "avatar": "https://media.senscritique.com/media/000022876225/100x100/Sergent-Steiner.jpg",
+     "followers_count": 22,
+     "rating_count": 406,
+     "user": {
+      "username": "Sergent-Steiner"
+     }
+    },
+    {
+     "id": null,
+     "title": "ghost",
+     "user": null
+    }
+   ]
+  }
+ }
+}

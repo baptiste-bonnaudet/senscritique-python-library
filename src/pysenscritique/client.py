@@ -14,6 +14,8 @@ from ._parse import (
     parse_collection_item,
     parse_review,
     parse_shout,
+    parse_user_profile,
+    parse_user_search_hit,
     parse_work_details,
     parse_work_summary,
 )
@@ -23,6 +25,8 @@ from ._queries import (
     REVIEW,
     SEARCH,
     TOPCHART,
+    USER_PROFILE,
+    USER_SEARCH,
     WORK_DETAILS,
     WORK_REVIEWS,
     WORK_SHOUTS,
@@ -35,6 +39,7 @@ from .models import (
     BulkError,
     BulkResult,
     CollectionAction,
+    CollectionSort,
     Review,
     ReviewFilter,
     ReviewSort,
@@ -43,6 +48,8 @@ from .models import (
     TopChartEntry,
     Universe,
     UserCollectionItem,
+    UserProfile,
+    UserSearchHit,
     WorkDetails,
     WorkSummary,
 )
@@ -97,24 +104,57 @@ class SensCritique:
 
     # -- collection ---------------------------------------------------------
 
+    @staticmethod
+    def _collection_filter_variables(
+        genre_id: int | None,
+        year_date_done: int | None,
+        keywords: str | None,
+        order: CollectionSort | str | None,
+        is_agenda: bool | None,
+    ) -> dict[str, Any]:
+        variables: dict[str, Any] = {}
+        if genre_id is not None:
+            variables["genreId"] = genre_id
+        if year_date_done is not None:
+            variables["yearDateDone"] = year_date_done
+        if keywords is not None:
+            variables["keywords"] = keywords
+        if order is not None:
+            variables["order"] = CollectionSort(order).value
+        if is_agenda is not None:
+            variables["isAgenda"] = is_agenda
+        return variables
+
     async def collection(
         self,
         username: str,
         universe: Universe | str = Universe.MOVIE,
         action: CollectionAction | str = CollectionAction.DONE,
         *,
+        genre_id: int | None = None,
+        year_date_done: int | None = None,
+        keywords: str | None = None,
+        order: CollectionSort | str | None = None,
+        is_agenda: bool | None = None,
         strict: bool = False,
         page_size: int = DEFAULT_PAGE_SIZE,
     ) -> AsyncIterator[UserCollectionItem]:
         """Iterate over a user's collection, page by page.
+
+        Optional server-side filters: ``genre_id``, ``year_date_done`` (year
+        the item was marked done), ``keywords`` (title search), ``order``
+        (:class:`CollectionSort`), ``is_agenda``.
 
         Lenient by default: malformed items are logged and skipped. With
         ``strict=True`` the first malformed item raises :class:`ParseError`.
         Raises :class:`UserNotFoundError` for unknown usernames.
         """
         act = CollectionAction(action)
+        filters = self._collection_filter_variables(
+            genre_id, year_date_done, keywords, order, is_agenda
+        )
         async for payload in self._collection_payloads(
-            username, coerce_universe(universe), act, page_size
+            username, coerce_universe(universe), act, filters, page_size
         ):
             try:
                 yield parse_collection_item(payload, act)
@@ -132,35 +172,32 @@ class SensCritique:
         universe: Universe | str = Universe.MOVIE,
         action: CollectionAction | str = CollectionAction.DONE,
         *,
+        genre_id: int | None = None,
+        year_date_done: int | None = None,
+        keywords: str | None = None,
+        order: CollectionSort | str | None = None,
+        is_agenda: bool | None = None,
         strict: bool = False,
         page_size: int = DEFAULT_PAGE_SIZE,
     ) -> BulkResult[UserCollectionItem]:
         """Collect the whole collection, with a structured error report."""
         act = CollectionAction(action)
-        items: list[UserCollectionItem] = []
-        errors: list[BulkError] = []
-        async for payload in self._collection_payloads(
-            username, coerce_universe(universe), act, page_size
-        ):
-            try:
-                items.append(parse_collection_item(payload, act))
-            except ParseError as exc:
-                if strict:
-                    raise
-                errors.append(
-                    BulkError(
-                        payload=exc.payload,
-                        error_type=type(exc).__name__,
-                        message=str(exc),
-                    )
-                )
-        return BulkResult(items=items, errors=errors)
+        filters = self._collection_filter_variables(
+            genre_id, year_date_done, keywords, order, is_agenda
+        )
+        payloads = self._collection_payloads(
+            username, coerce_universe(universe), act, filters, page_size
+        )
+        return await self._collect_items(
+            payloads, lambda payload: parse_collection_item(payload, act), strict
+        )
 
     async def _collection_payloads(
         self,
         username: str,
         universe: Universe,
         action: CollectionAction,
+        filters: dict[str, Any],
         page_size: int,
     ) -> AsyncIterator[dict[str, Any]]:
         offset = 0
@@ -169,6 +206,7 @@ class SensCritique:
                 "UserCollection",
                 COLLECTION,
                 {
+                    **filters,
                     "username": username,
                     "universe": universe.value,
                     "action": action.value,
@@ -187,6 +225,49 @@ class SensCritique:
             offset += len(products)
             if not products or offset >= total:
                 return
+
+    # -- users --------------------------------------------------------------
+
+    async def user_profile(self, username: str) -> UserProfile:
+        """Fetch a user's public profile, stats, and per-universe counts.
+
+        Raises :class:`UserNotFoundError` for unknown usernames.
+        """
+        data = await self._transport.graphql(
+            "UserProfile", USER_PROFILE, {"username": username}
+        )
+        user = data.get("user")
+        if user is None:
+            raise UserNotFoundError(username)
+        return parse_user_profile(user)
+
+    async def search_users(
+        self,
+        query: str,
+        *,
+        limit: int = 10,
+        offset: int = 0,
+        strict: bool = False,
+    ) -> list[UserSearchHit]:
+        """Search user accounts by name."""
+        data = await self._transport.graphql(
+            "SearchUsers",
+            USER_SEARCH,
+            {"query": query, "limit": limit, "offset": offset},
+        )
+        explorer = data.get("searchUserExplorer") or {}
+        hits: list[UserSearchHit] = []
+        for payload in explorer.get("items") or []:
+            try:
+                hits.append(parse_user_search_hit(payload))
+            except ParseError as exc:
+                if strict:
+                    raise
+                logger.warning(
+                    "skipping malformed user search result",
+                    extra={"query": query, "error": str(exc)},
+                )
+        return hits
 
     # -- search -------------------------------------------------------------
 

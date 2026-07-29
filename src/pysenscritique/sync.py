@@ -21,6 +21,7 @@ from .models import (
     AutocompleteHit,
     BulkResult,
     CollectionAction,
+    CollectionSort,
     Review,
     ReviewFilter,
     ReviewSort,
@@ -29,6 +30,8 @@ from .models import (
     TopChartEntry,
     Universe,
     UserCollectionItem,
+    UserProfile,
+    UserSearchHit,
     WorkDetails,
     WorkSummary,
 )
@@ -109,12 +112,26 @@ class SensCritiqueSync:
         universe: Universe | str = Universe.MOVIE,
         action: CollectionAction | str = CollectionAction.DONE,
         *,
+        genre_id: int | None = None,
+        year_date_done: int | None = None,
+        keywords: str | None = None,
+        order: CollectionSort | str | None = None,
+        is_agenda: bool | None = None,
         strict: bool = False,
         page_size: int = DEFAULT_PAGE_SIZE,
     ) -> Iterator[UserCollectionItem]:
         return self._iterate(
             self._client.collection(
-                username, universe, action, strict=strict, page_size=page_size
+                username,
+                universe,
+                action,
+                genre_id=genre_id,
+                year_date_done=year_date_done,
+                keywords=keywords,
+                order=order,
+                is_agenda=is_agenda,
+                strict=strict,
+                page_size=page_size,
             )
         )
 
@@ -124,12 +141,43 @@ class SensCritiqueSync:
         universe: Universe | str = Universe.MOVIE,
         action: CollectionAction | str = CollectionAction.DONE,
         *,
+        genre_id: int | None = None,
+        year_date_done: int | None = None,
+        keywords: str | None = None,
+        order: CollectionSort | str | None = None,
+        is_agenda: bool | None = None,
         strict: bool = False,
         page_size: int = DEFAULT_PAGE_SIZE,
     ) -> BulkResult[UserCollectionItem]:
         return self._call(
             self._client.collection_all(
-                username, universe, action, strict=strict, page_size=page_size
+                username,
+                universe,
+                action,
+                genre_id=genre_id,
+                year_date_done=year_date_done,
+                keywords=keywords,
+                order=order,
+                is_agenda=is_agenda,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def user_profile(self, username: str) -> UserProfile:
+        return self._call(self._client.user_profile(username))
+
+    def search_users(
+        self,
+        query: str,
+        *,
+        limit: int = 10,
+        offset: int = 0,
+        strict: bool = False,
+    ) -> list[UserSearchHit]:
+        return self._call(
+            self._client.search_users(
+                query, limit=limit, offset=offset, strict=strict
             )
         )
 

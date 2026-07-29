@@ -21,10 +21,16 @@ COLLECTION = (
     """
 query UserCollection(
   $action: ProductAction, $limit: Int, $offset: Int,
-  $universe: String, $username: String
+  $universe: String, $username: String, $genreId: Int,
+  $yearDateDone: Int, $keywords: String, $order: CollectionSort,
+  $isAgenda: Boolean
 ) {
   user(username: $username) {
-    collection(action: $action, limit: $limit, offset: $offset, universe: $universe) {
+    collection(
+      action: $action, limit: $limit, offset: $offset, universe: $universe,
+      genreId: $genreId, yearDateDone: $yearDateDone, keywords: $keywords,
+      order: $order, isAgenda: $isAgenda
+    ) {
       total
       products {
 """
@@ -61,6 +67,43 @@ query SearchProducts(
 }
 """
 )
+
+USER_PROFILE = """
+query UserProfile($username: String) {
+  user(username: $username) {
+    id
+    username
+    name
+    url
+    description
+    dateCreation
+    medias { avatar backdrop }
+    stats {
+      collectionCount diaryCount followerCount listCount pollCount
+      topCount ratingCount reviewCount scoutCount
+    }
+    ratingCounts { universe count }
+    wishCounts { universe count }
+  }
+}
+"""
+
+USER_SEARCH = """
+query SearchUsers($query: String, $limit: Int, $offset: Int) {
+  searchUserExplorer(query: $query, limit: $limit, offset: $offset) {
+    total
+    items {
+      id
+      title
+      url
+      avatar
+      followers_count
+      rating_count
+      user { username }
+    }
+  }
+}
+"""
 
 AUTOCOMPLETE = (
     """

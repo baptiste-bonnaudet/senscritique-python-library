@@ -61,6 +61,7 @@ live-verified mapping is recorded in the repo `ROADMAP.md`.
 - [collection.md](collection.md): `UserCollection` (paginated user collection)
 - [search.md](search.md): `searchProductExplorer`
 - [autocomplete.md](autocomplete.md): `searchAutocomplete` (works + people)
+- [users.md](users.md): `user(username:)`, `searchUserExplorer`
 - [work-details.md](work-details.md): `product(id:)`
 - [work-listings.md](work-listings.md): `Product.reviews`, `Product.shouts`
 - [topchart.md](topchart.md): `top(universe:, subtype:)`

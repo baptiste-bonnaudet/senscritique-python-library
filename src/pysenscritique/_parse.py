@@ -25,6 +25,9 @@ from .models import (
     ShoutSummary,
     Universe,
     UserCollectionItem,
+    UserProfile,
+    UserSearchHit,
+    UserStats,
     VodOffer,
     WorkDetails,
     WorkStats,
@@ -307,6 +310,74 @@ def parse_work_details(payload: dict[str, Any]) -> WorkDetails:
     except (KeyError, TypeError, ValidationError) as exc:
         raise ParseError(
             f"invalid work details payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def _universe_counts(entries: Any) -> dict[str, int]:
+    """``[{universe, count}]`` to a dict, dropping the ``total`` pseudo-entry."""
+    counts: dict[str, int] = {}
+    for entry in entries or []:
+        if not isinstance(entry, dict):
+            continue
+        universe = entry.get("universe")
+        if universe and universe != "total":
+            counts[universe] = entry.get("count") or 0
+    return counts
+
+
+def parse_user_profile(payload: dict[str, Any]) -> UserProfile:
+    try:
+        medias = payload.get("medias") or {}
+        stats = payload.get("stats") or {}
+        return UserProfile(
+            id=payload["id"],
+            username=payload["username"],
+            display_name=payload.get("name"),
+            url=payload.get("url"),
+            description=payload.get("description"),
+            date_created=parse_datetime(payload.get("dateCreation")),
+            avatar_url=medias.get("avatar"),
+            backdrop_url=medias.get("backdrop"),
+            stats=UserStats(
+                collection_count=stats.get("collectionCount"),
+                diary_count=stats.get("diaryCount"),
+                follower_count=stats.get("followerCount"),
+                list_count=stats.get("listCount"),
+                poll_count=stats.get("pollCount"),
+                top_count=stats.get("topCount"),
+                rating_count=stats.get("ratingCount"),
+                review_count=stats.get("reviewCount"),
+                scout_count=stats.get("scoutCount"),
+            )
+            if stats
+            else None,
+            rating_counts=_universe_counts(payload.get("ratingCounts")),
+            wish_counts=_universe_counts(payload.get("wishCounts")),
+        )
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid user profile payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def parse_user_search_hit(payload: dict[str, Any]) -> UserSearchHit:
+    try:
+        user = payload.get("user") or {}
+        username = user.get("username") or payload.get("title")
+        if not username:
+            raise KeyError("username")
+        return UserSearchHit(
+            id=payload["id"],
+            username=username,
+            display_name=payload.get("title"),
+            url=payload.get("url"),
+            avatar_url=payload.get("avatar"),
+            followers_count=payload.get("followers_count"),
+            rating_count=payload.get("rating_count"),
+        )
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid user search payload: {exc}", payload=_snippet(payload)
         ) from exc
 
 

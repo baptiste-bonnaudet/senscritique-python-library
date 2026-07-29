@@ -116,6 +116,85 @@ async def test_collection_empty() -> None:
 
 
 @respx.mock
+async def test_collection_filter_variables(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("collection_page2.json"))
+    async with make_client() as sc:
+        await sc.collection_all(
+            "vsv",
+            action="RATING",
+            year_date_done=2021,
+            order="USER_RATING_DESC",
+            keywords="dune",
+        )
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["action"] == "RATING"
+    assert variables["yearDateDone"] == 2021
+    assert variables["order"] == "USER_RATING_DESC"
+    assert variables["keywords"] == "dune"
+    assert "genreId" not in variables
+    assert "isAgenda" not in variables
+
+
+async def test_collection_invalid_sort_rejected() -> None:
+    async with make_client() as sc:
+        with pytest.raises(ValueError):
+            await sc.collection_all("vsv", order="BEST_FIRST")
+
+
+@respx.mock
+async def test_user_profile(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("user_profile.json"))
+    async with make_client() as sc:
+        profile = await sc.user_profile("vsv")
+    assert profile.id == 200295
+    assert profile.username == "vsv"
+    assert profile.date_created is not None
+    assert profile.date_created.year == 2014
+    assert profile.avatar_url is not None
+    assert profile.stats is not None
+    assert profile.stats.collection_count == 1841
+    assert profile.stats.diary_count == 348
+    # Unmapped universes keep their API string keys; "total" is dropped.
+    assert profile.rating_counts["movie"] == 947
+    assert profile.rating_counts["musicAlbum"] == 554
+    assert "total" not in profile.rating_counts
+    assert profile.wish_counts["movie"] >= 0
+
+
+@respx.mock
+async def test_user_profile_unknown(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("user_not_found.json"))
+    async with make_client() as sc:
+        with pytest.raises(UserNotFoundError):
+            await sc.user_profile("ghost_user_42")
+
+
+@respx.mock
+async def test_search_users(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("user_search.json"))
+    async with make_client() as sc:
+        hits = await sc.search_users("sergent", limit=3)
+    # The id-less hit is skipped leniently.
+    assert [h.username for h in hits] == ["Sergent_Pepper", "Sergent-Steiner"]
+    assert hits[0].id == 105078
+    assert hits[0].followers_count == 17502
+    assert hits[0].rating_count == 11289
+    assert hits[0].url == "https://www.senscritique.com/Sergent_Pepper"
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["query"] == "sergent"
+
+
+@respx.mock
+async def test_search_users_strict(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("user_search.json"))
+    async with make_client() as sc:
+        with pytest.raises(ParseError):
+            await sc.search_users("sergent", strict=True)
+
+
+@respx.mock
 async def test_search(load_fixture: Any) -> None:
     route = respx.post(GRAPHQL_URL)
     route.respond(json=load_fixture("search.json"))

@@ -10,13 +10,31 @@ the backbone of collection sync.
 
 Variables used by the library:
 
-| Variable   | Type            | Notes                                        |
-| ---------- | --------------- | -------------------------------------------- |
-| `username` | `String`        | also passed to `otherUserInfos(username:)`   |
-| `universe` | `String`        | `movie` / `tvShow` / `book` / ...            |
-| `action`   | `ProductAction` | `DONE` (watched/read) or `WISH` (wishlist)   |
-| `offset`   | `Int`           | advanced by the number of products returned  |
-| `limit`    | `Int`           | page size; the library defaults to 30        |
+| Variable       | Type             | Notes                                       |
+| -------------- | ---------------- | ------------------------------------------- |
+| `username`     | `String`         | also passed to `otherUserInfos(username:)`  |
+| `universe`     | `String`         | `movie` / `tvShow` / `book` / ...           |
+| `action`       | `ProductAction`  | see enum below                              |
+| `offset`       | `Int`            | advanced by the number of products returned |
+| `limit`        | `Int`            | page size; the library defaults to 30       |
+| `genreId`      | `Int`            | optional server-side genre filter           |
+| `yearDateDone` | `Int`            | only items marked done in that year         |
+| `keywords`     | `String`         | title search within the collection          |
+| `order`        | `CollectionSort` | see enum below                              |
+| `isAgenda`     | `Boolean`        | agenda (planned) items                      |
+
+`ProductAction` (all verified via introspection): `CURRENT`, `DONE`,
+`RATING`, `RECENT`, `RECOMMEND`, `SHOPPING_LIST`, `WISH`.
+
+`CollectionSort`: `DATE_RELEASE_DESC`, `LAST_ACTION_DESC`, `MY_RATING_DESC`,
+`POPULARITY_DESC`, `RATING_DESC`, `TITLE_ASC`, `USER_RATING_DESC`.
+
+The collection field takes more filters the library does not send yet
+(`categoryId`, `gameSystemId`, `isDiary`, `month`/`monthDateDone`,
+`yearDateRelease`, `minDateRelease`/`maxDateRelease`, `showTvAgenda`,
+`useDefaultUserOrder`, `versus`, `isCollection`). A filtered probe
+(`action: RATING, yearDateDone: 2021, order: USER_RATING_DESC`) returned
+correctly filtered results without auth.
 
 The library's trimmed query lives in `src/pysenscritique/_queries.py`
 (`COLLECTION`). Works even for private profiles.

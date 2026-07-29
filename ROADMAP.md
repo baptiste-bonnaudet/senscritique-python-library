@@ -36,3 +36,10 @@ Notes:
 - When implemented: extend `Universe` and `_UNIVERSE_IDS` in `models.py`,
   and unmapped-universe `ParseError` skips (e.g. comics in autocomplete
   results) disappear on their own.
+
+## versus (needs auth)
+
+`versus(username:, universe:)` compares the logged-in user against another
+(`perfectMatch`, `difference`, `heLikes`, `wishes`... all product lists).
+Verified live 2026-07-29: every field is null without auth, so it is useless
+to this credential-free library today. Revisit if auth support ever lands.

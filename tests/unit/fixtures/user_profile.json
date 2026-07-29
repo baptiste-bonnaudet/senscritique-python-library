@@ -1,0 +1,95 @@
+{
+ "data": {
+  "user": {
+   "id": 200295,
+   "username": "vsv",
+   "name": "vsv",
+   "url": "/vsv",
+   "description": null,
+   "dateCreation": "2014-04-04T19:34:07.000Z",
+   "medias": {
+    "avatar": "https://media.senscritique.com/media/media/000018288498/120x120/avatar.jpg",
+    "backdrop": "https://media.senscritique.com/media/media/000017432799/800/cover.jpg"
+   },
+   "stats": {
+    "collectionCount": 1841,
+    "diaryCount": 348,
+    "followerCount": 7,
+    "listCount": 5,
+    "pollCount": 13,
+    "topCount": 0,
+    "ratingCount": 1580,
+    "reviewCount": 0,
+    "scoutCount": 8
+   },
+   "ratingCounts": [
+    {
+     "universe": "movie",
+     "count": 947
+    },
+    {
+     "universe": "book",
+     "count": 0
+    },
+    {
+     "universe": "game",
+     "count": 0
+    },
+    {
+     "universe": "tvShow",
+     "count": 173
+    },
+    {
+     "universe": "comicBook",
+     "count": 0
+    },
+    {
+     "universe": "musicAlbum",
+     "count": 554
+    },
+    {
+     "universe": "musicTrack",
+     "count": 0
+    },
+    {
+     "universe": "total",
+     "count": 1674
+    }
+   ],
+   "wishCounts": [
+    {
+     "universe": "movie",
+     "count": 119
+    },
+    {
+     "universe": "book",
+     "count": 2
+    },
+    {
+     "universe": "game",
+     "count": 0
+    },
+    {
+     "universe": "tvShow",
+     "count": 43
+    },
+    {
+     "universe": "comicBook",
+     "count": 0
+    },
+    {
+     "universe": "musicAlbum",
+     "count": 0
+    },
+    {
+     "universe": "musicTrack",
+     "count": 0
+    },
+    {
+     "universe": "total",
+     "count": 164
+    }
+   ]
+  }
+ }
+}

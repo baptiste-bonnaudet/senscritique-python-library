@@ -42,10 +42,27 @@ _UNIVERSE_IDS: dict[Universe, int] = {
 
 
 class CollectionAction(StrEnum):
-    """User action filter for collection queries."""
+    """User action filter for collection queries (API ``ProductAction``)."""
 
+    CURRENT = "CURRENT"
     DONE = "DONE"
+    RATING = "RATING"
+    RECENT = "RECENT"
+    RECOMMEND = "RECOMMEND"
+    SHOPPING_LIST = "SHOPPING_LIST"
     WISH = "WISH"
+
+
+class CollectionSort(StrEnum):
+    """Server-side sort order for collection queries."""
+
+    DATE_RELEASE_DESC = "DATE_RELEASE_DESC"
+    LAST_ACTION_DESC = "LAST_ACTION_DESC"
+    MY_RATING_DESC = "MY_RATING_DESC"
+    POPULARITY_DESC = "POPULARITY_DESC"
+    RATING_DESC = "RATING_DESC"
+    TITLE_ASC = "TITLE_ASC"
+    USER_RATING_DESC = "USER_RATING_DESC"
 
 
 class ReviewFilter(StrEnum):
@@ -121,6 +138,60 @@ class UserCollectionItem(BaseModel):
     date_done: datetime.date | None = None
     is_reviewed: bool = False
     review_url: str | None = None
+
+
+class UserStats(BaseModel):
+    """Aggregate counters of a user account."""
+
+    model_config = ConfigDict(frozen=True)
+
+    collection_count: int | None = None
+    diary_count: int | None = None
+    follower_count: int | None = None
+    list_count: int | None = None
+    poll_count: int | None = None
+    top_count: int | None = None
+    rating_count: int | None = None
+    review_count: int | None = None
+    scout_count: int | None = None
+
+
+class UserProfile(BaseModel):
+    """A user's public profile.
+
+    ``rating_counts``/``wish_counts`` are keyed by the API universe string
+    (``"movie"``, ``"game"``...), including universes the library does not
+    map as :class:`Universe` members; the ``"total"`` pseudo-universe entry
+    is dropped.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    username: str
+    display_name: str | None = None
+    url: str | None = None
+    description: str | None = None
+    date_created: datetime.datetime | None = None
+    avatar_url: str | None = None
+    backdrop_url: str | None = None
+    stats: UserStats | None = None
+    rating_counts: dict[str, int] = {}
+    wish_counts: dict[str, int] = {}
+
+
+class UserSearchHit(BaseModel):
+    """One result of a user search."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    username: str
+    display_name: str | None = None
+    url: str | None = None
+    avatar_url: str | None = None
+    followers_count: int | None = None
+    rating_count: int | None = None
 
 
 class Review(BaseModel):
