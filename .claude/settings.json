@@ -1,19 +1,49 @@
 {
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "Trusted personal repo: pysenscritique, a read-only Python client library for the SensCritique GraphQL API",
+      "Live probes against senscritique.com / apollo.senscritique.com are a normal part of development: always rate-limited, spaced out, with a browser User-Agent"
+    ],
+    "allow": [
+      "$defaults",
+      "Python/uv development workflow: uv, make, pytest, ruff, mypy, and running probe/scratch scripts from the session scratchpad",
+      "Read-only GraphQL queries and introspection against senscritique.com and apollo.senscritique.com"
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Ask before bulk or unthrottled request loops against SensCritique",
+      "Ask before deleting files outside the scratchpad or rewriting git history"
+    ]
+  },
   "permissions": {
-    "defaultMode": "acceptEdits",
+    "defaultMode": "auto",
     "allow": [
       "Bash(uv *)",
+      "Bash(uvx *)",
       "Bash(make *)",
       "Bash(git *)",
       "Bash(gh *)",
       "Bash(pytest *)",
       "Bash(ruff *)",
       "Bash(mypy *)",
+      "Bash(python *)",
+      "Bash(python3 *)",
       "Bash(curl *)",
+      "Bash(cd *)",
       "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(grep *)",
+      "Bash(rg *)",
       "Bash(find *)",
       "Bash(wc *)",
       "Bash(jq *)",
+      "Bash(diff *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
       "WebFetch(domain:senscritique.com)",
       "WebFetch(domain:www.senscritique.com)",
       "WebFetch(domain:old.senscritique.com)",
