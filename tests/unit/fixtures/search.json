@@ -1,0 +1,39 @@
+{
+ "data": {
+  "searchProductExplorer": {
+   "total": 1065,
+   "items": [
+    {
+     "id": 45424060,
+     "title": "Dune - Deuxième partie",
+     "originalTitle": "Dune: Part Two",
+     "yearOfProduction": 2024,
+     "universe": 1,
+     "url": "/film/dune_deuxieme_partie/45424060",
+     "slug": "dune_deuxieme_partie",
+     "rating": 7.6
+    },
+    {
+     "id": 434214,
+     "title": "Dune",
+     "originalTitle": null,
+     "yearOfProduction": 1985,
+     "universe": 1,
+     "url": "/film/dune/434214",
+     "slug": "dune",
+     "rating": 6
+    },
+    {
+     "id": 24698928,
+     "title": "Dune",
+     "originalTitle": null,
+     "yearOfProduction": 2021,
+     "universe": 1,
+     "url": "/film/dune/24698928",
+     "slug": "dune",
+     "rating": 7.3
+    }
+   ]
+  }
+ }
+}

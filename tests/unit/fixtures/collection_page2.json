@@ -1,0 +1,16 @@
+{
+ "data": {
+  "user": {
+   "collection": {
+    "total": 3,
+    "products": [
+     {
+      "title": "Broken item without id",
+      "universe": 1,
+      "otherUserInfos": null
+     }
+    ]
+   }
+  }
+ }
+}

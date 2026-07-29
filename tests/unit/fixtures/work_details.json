@@ -1,0 +1,49 @@
+{
+ "data": {
+  "product": {
+   "id": 451178,
+   "title": "L'Aurore",
+   "originalTitle": "Sunrise: A Song of Two Humans",
+   "alternativeTitles": [
+    "Sunrise"
+   ],
+   "yearOfProduction": 1928,
+   "displayedYear": null,
+   "universe": 1,
+   "category": "Film",
+   "url": "/film/l_aurore/451178",
+   "slug": "l_aurore",
+   "rating": 8.3,
+   "synopsis": "Séduit par une vamp venue de la ville, un fermier tente de noyer sa femme, mais renonce au dernier moment. Apeurée, celle-ci fuit vers la ville. Son mari la suit afin de lui prouver son amour et, après avoir résisté, la jeune femme le pardonne...",
+   "duration": 5640,
+   "dateRelease": "1927-11-04",
+   "frenchReleaseDate": "1928-10-11",
+   "genresInfos": [
+    {
+     "label": "Drame"
+    },
+    {
+     "label": "Romance"
+    },
+    {
+     "label": "Muet"
+    }
+   ],
+   "directors": [
+    {
+     "name": "Friedrich Wilhelm Murnau"
+    }
+   ],
+   "creators": null,
+   "authors": null,
+   "developers": null,
+   "artists": null,
+   "medias": {
+    "picture": "https://media.senscritique.com/media/000004692781/300/l_aurore.jpg"
+   },
+   "stats": {
+    "ratingCount": 9182
+   }
+  }
+ }
+}

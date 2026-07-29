@@ -1,0 +1,36 @@
+{
+ "data": {
+  "top": [
+   {
+    "id": 370894,
+    "title": "Douze Hommes en colère",
+    "originalTitle": "12 Angry Men",
+    "yearOfProduction": 1957,
+    "universe": 1,
+    "url": "/film/douze_hommes_en_colere/370894",
+    "slug": "douze_hommes_en_colere",
+    "rating": 8.7
+   },
+   {
+    "id": 402373,
+    "title": "Harakiri",
+    "originalTitle": "Seppuku",
+    "yearOfProduction": 1963,
+    "universe": 1,
+    "url": "/film/harakiri/402373",
+    "slug": "harakiri",
+    "rating": 8.6
+   },
+   {
+    "id": 368376,
+    "title": "Le Bon, la Brute et le Truand",
+    "originalTitle": "Il buono, il brutto, il cattivo",
+    "yearOfProduction": 1968,
+    "universe": 1,
+    "url": "/film/le_bon_la_brute_et_le_truand/368376",
+    "slug": "le_bon_la_brute_et_le_truand",
+    "rating": 8.5
+   }
+  ]
+ }
+}

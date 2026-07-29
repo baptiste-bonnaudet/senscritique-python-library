@@ -1,0 +1,46 @@
+{
+ "data": {
+  "user": {
+   "collection": {
+    "total": 3,
+    "products": [
+     {
+      "id": 11348008,
+      "title": "Mercuriales",
+      "originalTitle": null,
+      "yearOfProduction": 2014,
+      "universe": 1,
+      "url": "/film/mercuriales/11348008",
+      "slug": "mercuriales",
+      "rating": 6.7,
+      "otherUserInfos": {
+       "dateDone": "2021-03-14T00:00:00Z",
+       "isReviewed": true,
+       "rating": 8,
+       "review": {
+        "id": 123456,
+        "url": "/film/mercuriales/critique/123456"
+       }
+      }
+     },
+     {
+      "id": 498012,
+      "title": "Café Lumière",
+      "originalTitle": "Kohi jikou",
+      "yearOfProduction": null,
+      "universe": 1,
+      "url": "/film/cafe_lumiere/498012",
+      "slug": "cafe_lumiere",
+      "rating": null,
+      "otherUserInfos": {
+       "dateDone": null,
+       "isReviewed": false,
+       "rating": null,
+       "review": null
+      }
+     }
+    ]
+   }
+  }
+ }
+}
