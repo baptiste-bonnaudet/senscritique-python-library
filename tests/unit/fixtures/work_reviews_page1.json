@@ -1,0 +1,35 @@
+{
+ "data": {
+  "product": {
+   "reviews": {
+    "total": 3,
+    "items": [
+     {
+      "id": 278545164,
+      "title": "Epic faith",
+      "url": "/film/dune_deuxieme_partie/critique/278545164",
+      "body": "\nAux exécutifs qui se tapent la tête sur leurs tablettes pour tenter de conjurer l’effondrement du b",
+      "bodyText": "<p>Aux exécutifs qui se tapent la tête sur leurs tablettes pour tenter de conjurer l’effondrement du",
+      "rating": 9,
+      "dateCreation": "2024-02-28T06:46:29.000Z",
+      "author": {
+       "username": "Sergent_Pepper"
+      }
+     },
+     {
+      "id": 302330727,
+      "title": "Du grand et beau cinéma, malgré tout.",
+      "url": "/film/dune_deuxieme_partie/critique/302330727",
+      "body": "\nCe qui m&#39;a toujours fasciné chez **Denis Villeneuve**, ce sont ces réalisations impressionnante",
+      "bodyText": "<p>Ce qui m&#39;a toujours fasciné chez <strong>Denis Villeneuve</strong>, ce sont ces réalisations ",
+      "rating": 7,
+      "dateCreation": "2024-03-04T00:31:06.000Z",
+      "author": {
+       "username": "blobyla1"
+      }
+     }
+    ]
+   }
+  }
+ }
+}

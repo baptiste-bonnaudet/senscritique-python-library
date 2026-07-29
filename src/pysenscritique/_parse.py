@@ -14,12 +14,20 @@ from pydantic import ValidationError
 from .errors import ParseError
 from .models import (
     AutocompleteHit,
+    CastMember,
     CollectionAction,
     ContactSummary,
+    Franchise,
+    Provider,
+    RatingHistogram,
     Review,
+    SeasonSummary,
+    ShoutSummary,
     Universe,
     UserCollectionItem,
+    VodOffer,
     WorkDetails,
+    WorkStats,
     WorkSummary,
 )
 
@@ -150,6 +158,100 @@ def _names(payload: dict[str, Any], *keys: str) -> tuple[str, ...]:
     return ()
 
 
+def _histogram(payload: dict[str, Any]) -> RatingHistogram | None:
+    split = (payload.get("statsDetails") or {}).get("split") or {}
+    counts = tuple(split.get(f"rating{n}") or 0 for n in range(1, 11))
+    if not any(counts):
+        return None
+    return RatingHistogram(counts=counts)  # type: ignore[arg-type]
+
+
+def _cast(payload: dict[str, Any]) -> tuple[CastMember, ...]:
+    members = []
+    for actor in payload.get("actors") or []:
+        if isinstance(actor, dict) and actor.get("name"):
+            members.append(
+                CastMember(
+                    name=actor["name"],
+                    role=actor.get("role"),
+                    url=actor.get("url"),
+                    person_id=actor.get("person_id"),
+                )
+            )
+    return tuple(members)
+
+
+def _similar(payload: dict[str, Any]) -> tuple[WorkSummary, ...]:
+    # Auxiliary data: unparseable entries (e.g. unmapped universes) are
+    # dropped rather than failing the whole details fetch.
+    works = []
+    for item in payload.get("similarProducts") or []:
+        try:
+            works.append(parse_work_summary(item))
+        except ParseError:
+            continue
+    return tuple(works)
+
+
+def _seasons(payload: dict[str, Any]) -> tuple[SeasonSummary, ...]:
+    seasons = []
+    for item in payload.get("seasons") or []:
+        if isinstance(item, dict) and item.get("id") and item.get("title"):
+            seasons.append(
+                SeasonSummary(
+                    id=item["id"],
+                    title=item["title"],
+                    url=item.get("url"),
+                    rating=item.get("rating"),
+                )
+            )
+    return tuple(seasons)
+
+
+def _vod_offers(payload: dict[str, Any]) -> tuple[VodOffer, ...]:
+    offers = []
+    for entry in payload.get("vodPlatforms") or []:
+        if not isinstance(entry, dict):
+            continue
+        label = (entry.get("platform") or {}).get("label")
+        if not label:
+            continue
+        for modality in entry.get("modalities") or []:
+            if isinstance(modality, dict):
+                offers.append(
+                    VodOffer(
+                        platform=label,
+                        mode=modality.get("mode"),
+                        price=modality.get("price"),
+                        quality=modality.get("quality"),
+                        url=modality.get("url"),
+                    )
+                )
+    return tuple(offers)
+
+
+def _providers(payload: dict[str, Any]) -> tuple[Provider, ...]:
+    providers = []
+    for entry in payload.get("providers") or []:
+        if isinstance(entry, dict) and entry.get("webUrl") is not None:
+            providers.append(
+                Provider(
+                    name=entry.get("name"),
+                    web_url=entry["webUrl"],
+                    provider_id=entry.get("providerId") or 0,
+                )
+            )
+    return tuple(providers)
+
+
+def _franchises(payload: dict[str, Any]) -> tuple[Franchise, ...]:
+    return tuple(
+        Franchise(id=f["id"], label=f.get("label"), url=f.get("url"))
+        for f in payload.get("franchises") or []
+        if isinstance(f, dict) and f.get("id") is not None
+    )
+
+
 def parse_work_details(payload: dict[str, Any]) -> WorkDetails:
     try:
         genres = payload.get("genresInfos") or []
@@ -176,10 +278,53 @@ def parse_work_details(payload: dict[str, Any]) -> WorkDetails:
                 payload, "directors", "creators", "authors", "developers", "artists"
             ),
             picture_url=medias.get("picture"),
+            alternative_titles=tuple(
+                t for t in payload.get("alternativeTitles") or [] if t
+            ),
+            screenwriters=_names(payload, "screenwriters"),
+            producers=_names(payload, "producers"),
+            cast=_cast(payload),
+            stats=WorkStats(
+                current_count=stats.get("currentCount"),
+                rating_count=stats.get("ratingCount"),
+                recommend_count=stats.get("recommendCount"),
+                review_count=stats.get("reviewCount"),
+                wish_count=stats.get("wishCount"),
+            )
+            if stats
+            else None,
+            rating_histogram=_histogram(payload),
+            similar=_similar(payload),
+            providers=_providers(payload),
+            vod_offers=_vod_offers(payload),
+            # 0 means "not a show" (movies report 0), not a real count.
+            number_of_seasons=payload.get("numberOfSeasons") or None,
+            seasons=_seasons(payload),
+            franchises=_franchises(payload),
+            backdrop_url=medias.get("backdrop"),
+            screenshot_url=medias.get("screenshot"),
         )
     except (KeyError, TypeError, ValidationError) as exc:
         raise ParseError(
             f"invalid work details payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def parse_shout(payload: dict[str, Any]) -> ShoutSummary:
+    try:
+        author = payload.get("author") or {}
+        return ShoutSummary(
+            id=payload["id"],
+            body=payload.get("body"),
+            rating=payload.get("rating"),
+            like_count=payload.get("likeCount"),
+            url=payload.get("url"),
+            author_username=author.get("username"),
+            date_created=parse_datetime(payload.get("dateCreation")),
+        )
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid shout payload: {exc}", payload=_snippet(payload)
         ) from exc
 
 

@@ -48,6 +48,30 @@ class CollectionAction(StrEnum):
     WISH = "WISH"
 
 
+class ReviewFilter(StrEnum):
+    """Server-side filter for a work's reviews listing."""
+
+    NEGATIVE = "NEGATIVE"
+    POSITIVE = "POSITIVE"
+    RECOMMEND = "RECOMMEND"
+    SCOUT = "SCOUT"
+
+
+class ReviewSort(StrEnum):
+    """Sort order for a work's reviews listing."""
+
+    DATE_ASC = "DATE_ASC"
+    DATE_DESC = "DATE_DESC"
+    LIKE_POSITIVE_COUNT = "LIKE_POSITIVE_COUNT"
+
+
+class ShoutSort(StrEnum):
+    """Sort order for a work's shouts listing."""
+
+    DATE_ASC = "DATE_ASC"
+    DATE_DESC = "DATE_DESC"
+
+
 class WorkSummary(BaseModel):
     """A work (movie, show, book...) as it appears in list responses."""
 
@@ -119,6 +143,108 @@ class Review(BaseModel):
     date_created: datetime.datetime | None = None
 
 
+class WorkStats(BaseModel):
+    """Aggregate user-action counters of a work."""
+
+    model_config = ConfigDict(frozen=True)
+
+    current_count: int | None = None
+    rating_count: int | None = None
+    recommend_count: int | None = None
+    review_count: int | None = None
+    wish_count: int | None = None
+
+
+class RatingHistogram(BaseModel):
+    """How many users gave each rating 1..10."""
+
+    model_config = ConfigDict(frozen=True)
+
+    counts: tuple[int, int, int, int, int, int, int, int, int, int]
+
+    def count_for(self, rating: int) -> int:
+        """Number of users who rated exactly ``rating`` (1..10)."""
+        if not 1 <= rating <= 10:
+            raise ValueError(f"rating must be 1..10, got {rating}")
+        return self.counts[rating - 1]
+
+    @property
+    def total(self) -> int:
+        return sum(self.counts)
+
+
+class CastMember(BaseModel):
+    """An actor credit on a work."""
+
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    role: str | None = None
+    url: str | None = None
+    person_id: int | None = None
+
+
+class SeasonSummary(BaseModel):
+    """One season of a TV show.
+
+    Seasons are API products of the unmapped universe 5 and never appear in
+    search, hence a dedicated model without a :class:`Universe` field.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    title: str
+    url: str | None = None
+    rating: float | None = None
+
+
+class Provider(BaseModel):
+    """An external streaming provider offering a work (via JustWatch)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    name: str | None = None
+    web_url: str
+    provider_id: int
+
+
+class VodOffer(BaseModel):
+    """One VOD purchase/rental modality, flattened per platform."""
+
+    model_config = ConfigDict(frozen=True)
+
+    platform: str
+    mode: str | None = None
+    price: float | None = None
+    quality: str | None = None
+    url: str | None = None
+
+
+class Franchise(BaseModel):
+    """A franchise/group a work belongs to."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    label: str | None = None
+    url: str | None = None
+
+
+class ShoutSummary(BaseModel):
+    """A short comment ("shout") on a work."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    body: str | None = None
+    rating: int | None = None
+    like_count: int | None = None
+    url: str | None = None
+    author_username: str | None = None
+    date_created: datetime.datetime | None = None
+
+
 class WorkDetails(BaseModel):
     """Detailed information about a single work."""
 
@@ -138,6 +264,20 @@ class WorkDetails(BaseModel):
     genres: tuple[str, ...] = ()
     creators: tuple[str, ...] = ()
     picture_url: str | None = None
+    alternative_titles: tuple[str, ...] = ()
+    screenwriters: tuple[str, ...] = ()
+    producers: tuple[str, ...] = ()
+    cast: tuple[CastMember, ...] = ()
+    stats: WorkStats | None = None
+    rating_histogram: RatingHistogram | None = None
+    similar: tuple[WorkSummary, ...] = ()
+    providers: tuple[Provider, ...] = ()
+    vod_offers: tuple[VodOffer, ...] = ()
+    number_of_seasons: int | None = None
+    seasons: tuple[SeasonSummary, ...] = ()
+    franchises: tuple[Franchise, ...] = ()
+    backdrop_url: str | None = None
+    screenshot_url: str | None = None
 
 
 class TopChartEntry(BaseModel):

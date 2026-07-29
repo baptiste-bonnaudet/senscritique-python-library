@@ -15,9 +15,28 @@ Unknown ids yield `data.product: null` (HTTP 200).
 `id`, `title`, `originalTitle`, `yearOfProduction`, `displayedYear`,
 `universe` (numeric), `url`, `slug`, `rating`, `synopsis`, `duration`
 (seconds), `dateRelease`, `frenchReleaseDate`, `genresInfos { label }`,
-`medias { picture }`, `stats { ratingCount }`, and the per-universe creator
+`medias { picture backdrop screenshot }`, and the per-universe creator
 lists: `directors`, `creators`, `authors`, `developers`, `artists`
 (each `{ name }`). The library takes the first non-empty creator list.
+
+Since v0.2 the query also consumes:
+
+- `screenwriters { name }`, `producers { name }` (name lists).
+- `actors { name role url person_id }`: main cast; pass
+  `actors(fullCasting: true)` for the full list (the library does not).
+- `alternativeTitles`: `[String]`.
+- `stats { currentCount ratingCount recommendCount reviewCount wishCount }`.
+- `statsDetails { split { rating1 .. rating10 } }`: rating histogram, ints.
+  `sum(split) == stats.ratingCount` (verified live).
+- `similarProducts { <summary fields> }`: observed empty (`[]`) on every
+  probe without auth; kept because it is schema-valid and may fill in later.
+- `providers { name webUrl providerId }`: JustWatch-style streaming links.
+- `vodPlatforms { platform { label } modalities { mode price quality url } }`:
+  per-platform rent/buy offers (modes seen: `TVOD`, `VODEST`).
+- `numberOfSeasons` (Int, `0` for non-shows), `seasons(limit: Int)`:
+  seasons are Products of the unmapped numeric universe **5** with URLs like
+  `/serie/breaking_bad/264963/S1`, `yearOfProduction: null`.
+- `franchises { id label url }` (URL segment `/groupe/`).
 
 ## Example response (trimmed)
 

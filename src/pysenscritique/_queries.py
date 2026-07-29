@@ -80,8 +80,20 @@ query Autocomplete($keywords: String!, $limit: Int, $universe: String) {
 """
 )
 
-WORK_DETAILS = """
-query WorkDetails($id: Int!) {
+_REVIEW_FIELDS = """
+    id
+    title
+    url
+    body
+    bodyText
+    rating
+    dateCreation
+    author { username }
+"""
+
+WORK_DETAILS = (
+    """
+query WorkDetails($id: Int!, $seasonsLimit: Int) {
   product(id: $id) {
     id
     title
@@ -102,8 +114,66 @@ query WorkDetails($id: Int!) {
     authors { name }
     developers { name }
     artists { name }
-    medias { picture }
-    stats { ratingCount }
+    screenwriters { name }
+    producers { name }
+    actors { name role url person_id }
+    alternativeTitles
+    medias { picture backdrop screenshot }
+    stats { currentCount ratingCount recommendCount reviewCount wishCount }
+    statsDetails { split {
+      rating1 rating2 rating3 rating4 rating5
+      rating6 rating7 rating8 rating9 rating10
+    } }
+    similarProducts {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+    }
+    providers { name webUrl providerId }
+    vodPlatforms { platform { label } modalities { mode price quality url } }
+    numberOfSeasons
+    seasons(limit: $seasonsLimit) { id title url rating }
+    franchises { id label url }
+  }
+}
+"""
+)
+
+WORK_REVIEWS = (
+    """
+query WorkReviews(
+  $id: Int!, $limit: Int!, $offset: Int!,
+  $filter: ReviewsFilter, $sortBy: ReviewsSorts
+) {
+  product(id: $id) {
+    reviews(limit: $limit, offset: $offset, filter: $filter, sortBy: $sortBy) {
+      total
+      items {
+"""
+    + _REVIEW_FIELDS
+    + """
+      }
+    }
+  }
+}
+"""
+)
+
+WORK_SHOUTS = """
+query WorkShouts($id: Int!, $limit: Int, $offset: Int, $order: ShoutsSorts) {
+  product(id: $id) {
+    shouts(limit: $limit, offset: $offset, order: $order) {
+      total
+      items {
+        id
+        body
+        rating
+        dateCreation
+        likeCount
+        url
+        author { username }
+      }
+    }
   }
 }
 """
@@ -120,17 +190,14 @@ query Top($universe: String, $subtype: TopSubtype, $limit: Int, $offset: Int) {
 """
 )
 
-REVIEW = """
+REVIEW = (
+    """
 query ReviewById($id: Int!) {
   review(id: $id) {
-    id
-    title
-    url
-    body
-    bodyText
-    rating
-    dateCreation
-    author { username }
+"""
+    + _REVIEW_FIELDS
+    + """
   }
 }
 """
+)

@@ -1,0 +1,139 @@
+{
+ "data": {
+  "product": {
+   "id": 45424060,
+   "title": "Dune - Deuxième partie",
+   "originalTitle": "Dune: Part Two",
+   "yearOfProduction": 2024,
+   "universe": 1,
+   "url": "/film/dune_deuxieme_partie/45424060",
+   "slug": "dune_deuxieme_partie",
+   "rating": 7.6,
+   "displayedYear": null,
+   "synopsis": "Paul Atreides s’unit avec Chani et les Fremen tout en préparant sa revanche contre les conspirateurs qui ont détruit sa ",
+   "duration": 9960,
+   "dateRelease": "2024-03-01",
+   "frenchReleaseDate": "2024-02-28",
+   "genresInfos": [
+    {
+     "label": "Science-fiction"
+    },
+    {
+     "label": "Drame"
+    }
+   ],
+   "directors": [
+    {
+     "name": "Denis Villeneuve"
+    }
+   ],
+   "creators": null,
+   "authors": null,
+   "developers": null,
+   "artists": null,
+   "screenwriters": [
+    {
+     "name": "Denis Villeneuve"
+    },
+    {
+     "name": "Jon Spaihts"
+    }
+   ],
+   "producers": [
+    {
+     "name": "Denis Villeneuve"
+    },
+    {
+     "name": "Thomas Tull"
+    }
+   ],
+   "actors": [
+    {
+     "name": "Timothée Chalamet",
+     "role": "Paul Atreides",
+     "url": "/contact/Timothee_Chalamet/1248505",
+     "person_id": 1248505
+    },
+    {
+     "name": "Zendaya",
+     "role": "Chani",
+     "url": "/contact/Zendaya/1011355",
+     "person_id": 1011355
+    },
+    {
+     "name": "Rebecca Ferguson",
+     "role": "Lady Jessica",
+     "url": "/contact/Rebecca_Ferguson/1823269",
+     "person_id": 1823269
+    }
+   ],
+   "alternativeTitles": [
+    "Dune 2"
+   ],
+   "medias": {
+    "picture": "https://media.senscritique.com/media/000021882399/300/dune_deuxieme_partie.png",
+    "backdrop": "https://media.senscritique.com/media/000021340991/500/dune_deuxieme_partie.jpg",
+    "screenshot": "https://media.senscritique.com/missing/701/300x0/missing.png"
+   },
+   "stats": {
+    "currentCount": 153,
+    "ratingCount": 36625,
+    "recommendCount": 2082,
+    "reviewCount": 700,
+    "wishCount": 5182
+   },
+   "statsDetails": {
+    "split": {
+     "rating1": 67,
+     "rating2": 127,
+     "rating3": 266,
+     "rating4": 587,
+     "rating5": 1342,
+     "rating6": 3127,
+     "rating7": 8034,
+     "rating8": 12533,
+     "rating9": 8044,
+     "rating10": 2498
+    }
+   },
+   "similarProducts": [],
+   "providers": [
+    {
+     "name": "MAX",
+     "webUrl": "https://click.justwatch.com/a?trimmed",
+     "providerId": 28
+    }
+   ],
+   "vodPlatforms": [
+    {
+     "platform": {
+      "label": "VIVA"
+     },
+     "modalities": [
+      {
+       "mode": "TVOD",
+       "price": 2.99,
+       "quality": "HD",
+       "url": "https://viva.videofutur.fr/?program=provider%3dvideofutur%26titId%3d10037373%26episodeNum%3d0%26vfDistributor%3dpepper-vod%26vfDevice%3d%7bvfDevice%7d%26vfProductId%3d%7bvfProductId%7d"
+      },
+      {
+       "mode": "VODEST",
+       "price": 7.99,
+       "quality": "HD",
+       "url": "https://viva.videofutur.fr/?program=provider%3dvideofutur%26titId%3d10037373%26episodeNum%3d0%26vfDistributor%3dpepper-vod%26vfDevice%3d%7bvfDevice%7d%26vfProductId%3d%7bvfProductId%7d"
+      }
+     ]
+    }
+   ],
+   "numberOfSeasons": 0,
+   "seasons": null,
+   "franchises": [
+    {
+     "id": 260,
+     "label": "Dune",
+     "url": "/groupe/Dune/260"
+    }
+   ]
+  }
+ }
+}

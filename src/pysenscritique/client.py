@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from typing import Any
 
 import httpx
@@ -13,10 +13,20 @@ from ._parse import (
     parse_autocomplete_hit,
     parse_collection_item,
     parse_review,
+    parse_shout,
     parse_work_details,
     parse_work_summary,
 )
-from ._queries import AUTOCOMPLETE, COLLECTION, REVIEW, SEARCH, TOPCHART, WORK_DETAILS
+from ._queries import (
+    AUTOCOMPLETE,
+    COLLECTION,
+    REVIEW,
+    SEARCH,
+    TOPCHART,
+    WORK_DETAILS,
+    WORK_REVIEWS,
+    WORK_SHOUTS,
+)
 from ._transport import AsyncTransport, RateLimit, RetryConfig
 from .errors import ParseError, UserNotFoundError
 from .logger import build_logger
@@ -26,6 +36,10 @@ from .models import (
     BulkResult,
     CollectionAction,
     Review,
+    ReviewFilter,
+    ReviewSort,
+    ShoutSort,
+    ShoutSummary,
     TopChartEntry,
     Universe,
     UserCollectionItem,
@@ -36,6 +50,7 @@ from .models import (
 logger = build_logger("pysenscritique.client")
 
 DEFAULT_PAGE_SIZE = 30
+DEFAULT_SEASONS_LIMIT = 50
 
 
 class SensCritique:
@@ -248,7 +263,9 @@ class SensCritique:
         """Fetch details for one work by numeric id or SensCritique URL."""
         work_id = extract_numeric_id(id_or_url, kind="work")
         data = await self._transport.graphql(
-            "WorkDetails", WORK_DETAILS, {"id": work_id}
+            "WorkDetails",
+            WORK_DETAILS,
+            {"id": work_id, "seasonsLimit": DEFAULT_SEASONS_LIMIT},
         )
         product = data.get("product")
         if product is None:
@@ -257,6 +274,176 @@ class SensCritique:
                 payload=data,
             )
         return parse_work_details(product)
+
+    # -- work reviews and shouts --------------------------------------------
+
+    async def _product_listing_payloads(
+        self,
+        operation: str,
+        query: str,
+        field: str,
+        work_id: int,
+        variables: dict[str, Any],
+        page_size: int,
+    ) -> AsyncIterator[dict[str, Any]]:
+        offset = 0
+        while True:
+            data = await self._transport.graphql(
+                operation,
+                query,
+                {**variables, "id": work_id, "limit": page_size, "offset": offset},
+            )
+            product = data.get("product")
+            if product is None:
+                raise ParseError(
+                    f"no product in response for id {work_id} (unknown id?)",
+                    payload=data,
+                )
+            listing = product.get(field) or {}
+            total = listing.get("total") or 0
+            items = listing.get("items") or []
+            for item in items:
+                yield item
+            offset += len(items)
+            if not items or offset >= total:
+                return
+
+    async def _lenient_items[T](
+        self,
+        payloads: AsyncIterator[dict[str, Any]],
+        parser: Callable[[dict[str, Any]], T],
+        label: str,
+        strict: bool,
+    ) -> AsyncIterator[T]:
+        async for payload in payloads:
+            try:
+                yield parser(payload)
+            except ParseError as exc:
+                if strict:
+                    raise
+                logger.warning(
+                    "skipping malformed item",
+                    extra={"kind": label, "error": str(exc)},
+                )
+
+    async def _collect_items[T](
+        self,
+        payloads: AsyncIterator[dict[str, Any]],
+        parser: Callable[[dict[str, Any]], T],
+        strict: bool,
+    ) -> BulkResult[T]:
+        items: list[T] = []
+        errors: list[BulkError] = []
+        async for payload in payloads:
+            try:
+                items.append(parser(payload))
+            except ParseError as exc:
+                if strict:
+                    raise
+                errors.append(
+                    BulkError(
+                        payload=exc.payload,
+                        error_type=type(exc).__name__,
+                        message=str(exc),
+                    )
+                )
+        return BulkResult(items=items, errors=errors)
+
+    @staticmethod
+    def _review_listing_variables(
+        filter: ReviewFilter | str | None, sort_by: ReviewSort | str | None
+    ) -> dict[str, Any]:
+        variables: dict[str, Any] = {}
+        if filter is not None:
+            variables["filter"] = ReviewFilter(filter).value
+        if sort_by is not None:
+            variables["sortBy"] = ReviewSort(sort_by).value
+        return variables
+
+    @staticmethod
+    def _shout_listing_variables(order: ShoutSort | str | None) -> dict[str, Any]:
+        variables: dict[str, Any] = {}
+        if order is not None:
+            variables["order"] = ShoutSort(order).value
+        return variables
+
+    def work_reviews(
+        self,
+        id_or_url: int | str,
+        *,
+        filter: ReviewFilter | str | None = None,
+        sort_by: ReviewSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> AsyncIterator[Review]:
+        """Iterate over a work's reviews, page by page."""
+        payloads = self._product_listing_payloads(
+            "WorkReviews",
+            WORK_REVIEWS,
+            "reviews",
+            extract_numeric_id(id_or_url, kind="work"),
+            self._review_listing_variables(filter, sort_by),
+            page_size,
+        )
+        return self._lenient_items(payloads, parse_review, "review", strict)
+
+    async def work_reviews_all(
+        self,
+        id_or_url: int | str,
+        *,
+        filter: ReviewFilter | str | None = None,
+        sort_by: ReviewSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[Review]:
+        """Collect all reviews of a work, with a structured error report."""
+        payloads = self._product_listing_payloads(
+            "WorkReviews",
+            WORK_REVIEWS,
+            "reviews",
+            extract_numeric_id(id_or_url, kind="work"),
+            self._review_listing_variables(filter, sort_by),
+            page_size,
+        )
+        return await self._collect_items(payloads, parse_review, strict)
+
+    def work_shouts(
+        self,
+        id_or_url: int | str,
+        *,
+        order: ShoutSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> AsyncIterator[ShoutSummary]:
+        """Iterate over a work's shouts (short comments), page by page."""
+        payloads = self._product_listing_payloads(
+            "WorkShouts",
+            WORK_SHOUTS,
+            "shouts",
+            extract_numeric_id(id_or_url, kind="work"),
+            self._shout_listing_variables(order),
+            page_size,
+        )
+        return self._lenient_items(payloads, parse_shout, "shout", strict)
+
+    async def work_shouts_all(
+        self,
+        id_or_url: int | str,
+        *,
+        order: ShoutSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[ShoutSummary]:
+        """Collect all shouts of a work, with a structured error report."""
+        payloads = self._product_listing_payloads(
+            "WorkShouts",
+            WORK_SHOUTS,
+            "shouts",
+            extract_numeric_id(id_or_url, kind="work"),
+            self._shout_listing_variables(order),
+            page_size,
+        )
+        return await self._collect_items(payloads, parse_shout, strict)
 
     # -- topchart -----------------------------------------------------------
 

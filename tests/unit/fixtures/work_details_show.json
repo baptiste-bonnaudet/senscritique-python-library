@@ -1,0 +1,153 @@
+{
+ "data": {
+  "product": {
+   "id": 264963,
+   "title": "Breaking Bad",
+   "originalTitle": null,
+   "yearOfProduction": null,
+   "universe": 4,
+   "url": "/serie/breaking_bad/264963",
+   "slug": "breaking_bad",
+   "rating": 8.6,
+   "displayedYear": null,
+   "synopsis": "Walter White, 50 ans, est professeur de chimie dans un lycée du Nouveau-Mexique. Pour subvenir aux besoins de Skyler, sa",
+   "duration": 2820,
+   "dateRelease": "2009-10-20",
+   "frenchReleaseDate": "2009-10-20",
+   "genresInfos": [
+    {
+     "label": "Policier"
+    },
+    {
+     "label": "Drame"
+    },
+    {
+     "label": "Thriller"
+    }
+   ],
+   "directors": [],
+   "creators": [
+    {
+     "name": "Vince Gilligan"
+    }
+   ],
+   "authors": null,
+   "developers": null,
+   "artists": null,
+   "screenwriters": [
+    {
+     "name": "Rian Johnson"
+    },
+    {
+     "name": "Peter Gould"
+    },
+    {
+     "name": "Vince Gilligan"
+    },
+    {
+     "name": "Gennifer Hutchison"
+    },
+    {
+     "name": "Moira Walley-Beckett"
+    },
+    {
+     "name": "George Mastras"
+    },
+    {
+     "name": "Sam Catlin"
+    },
+    {
+     "name": "Thomas Schnauz"
+    }
+   ],
+   "producers": [
+    {
+     "name": "Bryan Cranston"
+    }
+   ],
+   "actors": [
+    {
+     "name": "Bryan Cranston",
+     "role": "Walter White",
+     "url": "/contact/Bryan_Cranston/39402",
+     "person_id": 39402
+    },
+    {
+     "name": "Aaron Paul",
+     "role": "Jesse Pinkman",
+     "url": "/contact/Aaron_Paul/50413",
+     "person_id": 50413
+    }
+   ],
+   "alternativeTitles": [
+    "ブレイキング・バッド",
+    "Во все тяжкие"
+   ],
+   "medias": {
+    "picture": "https://media.senscritique.com/media/000020861455/300/breaking_bad.png",
+    "backdrop": "https://media.senscritique.com/media/000006469552/500/breaking_bad.jpg",
+    "screenshot": "https://media.senscritique.com/missing/701/300x0/missing.png"
+   },
+   "stats": {
+    "currentCount": 4387,
+    "ratingCount": 146304,
+    "recommendCount": 15802,
+    "reviewCount": 1114,
+    "wishCount": 16870
+   },
+   "statsDetails": {
+    "split": {
+     "rating1": 1693,
+     "rating2": 1031,
+     "rating3": 1421,
+     "rating4": 2110,
+     "rating5": 3703,
+     "rating6": 6345,
+     "rating7": 14316,
+     "rating8": 29946,
+     "rating9": 43380,
+     "rating10": 42364
+    }
+   },
+   "similarProducts": [],
+   "providers": [
+    {
+     "name": "Netflix",
+     "webUrl": "https://click.justwatch.com/a?cx=eyJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jb250ZXh0cy9qc29uc2NoZW1hLzEtMC0wIiwiZGF0YSI6W3sic2NoZW1hIjoiaWdsdTpjb20uanVzdHdhdGNoL2NsaWNrb3V0X2NvbnRleHQvanNvbnNjaGVtYS8xLTMtMiIsImRhdGEiOnsicHJvdmlkZXIiOiJOZXRmbGl4IiwibW9uZXRpemF0aW9uVHlwZSI6ImZsYXRyYXRlIiwicHJlc2VudGF0aW9uVHlwZSI6ImhkIiwiY3VycmVuY3kiOiJFVVIiLCJwYXJ0bmVySWQiOjksInByb3ZpZGVySWQiOjgsImNsaWNrb3V0VHlwZSI6Imp3LWNvbnRlbnQtcGFydG5lci1leHBvcnQtYXBpIn19LHsic2NoZW1hIjoiaWdsdTpjb20uanVzdHdhdGNoL3RpdGxlX2NvbnRleHQvanNvbnNjaGVtYS8xLTMtMCIsImRhdGEiOnsidGl0bGVJZCI6NCwib2JqZWN0VHlwZSI6InNob3ciLCJqd0VudGl0eUlkIjoidHM0In19XX0&r=https%3A%2F%2Fwww.netflix.com%2Ftitle%2F70143836&uct_country=fr",
+     "providerId": 1
+    }
+   ],
+   "vodPlatforms": null,
+   "numberOfSeasons": 5,
+   "seasons": [
+    {
+     "id": 11012805,
+     "title": "Breaking Bad - Saison 1",
+     "originalTitle": null,
+     "yearOfProduction": null,
+     "universe": 5,
+     "url": "/serie/breaking_bad/264963/S1",
+     "slug": "breaking_bad_saison_1",
+     "rating": 8.1
+    },
+    {
+     "id": 11012806,
+     "title": "Breaking Bad - Saison 2",
+     "originalTitle": null,
+     "yearOfProduction": null,
+     "universe": 5,
+     "url": "/serie/breaking_bad/264963/S2",
+     "slug": "breaking_bad_saison_2",
+     "rating": 8.3
+    }
+   ],
+   "franchises": [
+    {
+     "id": 8561,
+     "label": "Breaking Bad",
+     "url": "/groupe/Breaking_Bad/8561"
+    }
+   ]
+  }
+ }
+}

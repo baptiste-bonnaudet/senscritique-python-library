@@ -18,13 +18,17 @@ re-probing needed:
 | `book`       | 2          | livre       |
 | `game`       | 3          | jeuvideo    |
 | `tvShow`     | 4          | serie       |
+| (tv season)  | 5          | serie .../SN |
 | `comicBook`  | 6          | bd          |
 | `musicAlbum` | 7          | album       |
 | `musicTrack` | 8          | morceau     |
 
 Notes:
 
-- There is no universe 5.
+- Universe 5 is a TV season (items of `Product.seasons`, URLs like
+  `/serie/breaking_bad/264963/S1`); it has no known filter string and never
+  appears in search. The library models seasons as `SeasonSummary`, without
+  a `Universe` member.
 - Tracks (`musicTrack`, 8) are absent from the search index: filtering
   `searchProductExplorer` or `searchResult` on `musicTrack` returns nothing
   or a server error. Reach tracks through an album's

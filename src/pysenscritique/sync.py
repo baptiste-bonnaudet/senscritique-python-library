@@ -22,6 +22,10 @@ from .models import (
     BulkResult,
     CollectionAction,
     Review,
+    ReviewFilter,
+    ReviewSort,
+    ShoutSort,
+    ShoutSummary,
     TopChartEntry,
     Universe,
     UserCollectionItem,
@@ -158,6 +162,72 @@ class SensCritiqueSync:
 
     def work_details(self, id_or_url: int | str) -> WorkDetails:
         return self._call(self._client.work_details(id_or_url))
+
+    def work_reviews(
+        self,
+        id_or_url: int | str,
+        *,
+        filter: ReviewFilter | str | None = None,
+        sort_by: ReviewSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> Iterator[Review]:
+        return self._iterate(
+            self._client.work_reviews(
+                id_or_url,
+                filter=filter,
+                sort_by=sort_by,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def work_reviews_all(
+        self,
+        id_or_url: int | str,
+        *,
+        filter: ReviewFilter | str | None = None,
+        sort_by: ReviewSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[Review]:
+        return self._call(
+            self._client.work_reviews_all(
+                id_or_url,
+                filter=filter,
+                sort_by=sort_by,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def work_shouts(
+        self,
+        id_or_url: int | str,
+        *,
+        order: ShoutSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> Iterator[ShoutSummary]:
+        return self._iterate(
+            self._client.work_shouts(
+                id_or_url, order=order, strict=strict, page_size=page_size
+            )
+        )
+
+    def work_shouts_all(
+        self,
+        id_or_url: int | str,
+        *,
+        order: ShoutSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[ShoutSummary]:
+        return self._call(
+            self._client.work_shouts_all(
+                id_or_url, order=order, strict=strict, page_size=page_size
+            )
+        )
 
     def topchart(
         self,

@@ -208,6 +208,110 @@ async def test_work_details_unknown_id() -> None:
 
 
 @respx.mock
+async def test_work_details_full(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("work_details_full.json"))
+    async with make_client() as sc:
+        details = await sc.work_details(45424060)
+    assert details.title == "Dune - Deuxième partie"
+    assert details.alternative_titles == ("Dune 2",)
+    assert details.screenwriters == ("Denis Villeneuve", "Jon Spaihts")
+    assert details.producers == ("Denis Villeneuve", "Thomas Tull")
+    assert [c.name for c in details.cast] == [
+        "Timothée Chalamet",
+        "Zendaya",
+        "Rebecca Ferguson",
+    ]
+    assert details.cast[0].role == "Paul Atreides"
+    assert details.cast[0].person_id == 1248505
+    assert details.stats is not None
+    assert details.stats.wish_count == 5182
+    assert details.rating_histogram is not None
+    assert details.rating_histogram.count_for(8) == 12533
+    assert details.rating_histogram.total == 36625
+    assert details.providers[0].name == "MAX"
+    assert details.providers[0].provider_id == 28
+    offers = details.vod_offers
+    assert {o.platform for o in offers} == {"VIVA"}
+    assert {o.mode for o in offers} == {"TVOD", "VODEST"}
+    assert offers[0].price == 2.99
+    assert details.franchises[0].label == "Dune"
+    assert details.number_of_seasons is None
+    assert details.seasons == ()
+    assert details.backdrop_url is not None
+
+
+@respx.mock
+async def test_work_details_show_seasons(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("work_details_show.json"))
+    async with make_client() as sc:
+        details = await sc.work_details(264963)
+    assert details.universe is Universe.TV_SHOW
+    assert details.number_of_seasons == 5
+    assert [s.title for s in details.seasons] == [
+        "Breaking Bad - Saison 1",
+        "Breaking Bad - Saison 2",
+    ]
+    assert details.seasons[0].url == "/serie/breaking_bad/264963/S1"
+    assert details.seasons[0].rating == 8.1
+    assert details.creators == ("Vince Gilligan",)
+
+
+@respx.mock
+async def test_work_reviews_paginates(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.side_effect = [
+        httpx.Response(200, json=load_fixture("work_reviews_page1.json")),
+        httpx.Response(200, json=load_fixture("work_reviews_page2.json")),
+    ]
+    async with make_client() as sc:
+        reviews = [
+            r async for r in sc.work_reviews(45424060, page_size=2, sort_by="DATE_DESC")
+        ]
+    assert [r.id for r in reviews] == [278545164, 302330727, 301955219]
+    assert reviews[0].author_username == "Sergent_Pepper"
+    assert reviews[0].rating == 9
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["limit"] == 2
+    assert variables["offset"] == 0
+    assert variables["sortBy"] == "DATE_DESC"
+    assert graphql_variables(route.calls[1].request)["offset"] == 2
+
+
+@respx.mock
+async def test_work_reviews_filter_variables(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("work_reviews_page2.json"))
+    async with make_client() as sc:
+        await sc.work_reviews_all(45424060, filter="POSITIVE")
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["filter"] == "POSITIVE"
+    assert "sortBy" not in variables
+
+
+@respx.mock
+async def test_work_shouts_lenient_and_all(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("work_shouts.json"))
+    async with make_client() as sc:
+        result = await sc.work_shouts_all(45424060)
+    # The id-less shout is reported, not raised.
+    assert [s.id for s in result.items] == [397332, 504753]
+    assert len(result.errors) == 1
+    assert result.items[0].like_count == 109
+    assert result.items[0].author_username == "mikeopuvty"
+    assert result.items[0].date_created is not None
+    assert result.items[0].rating is None
+
+
+@respx.mock
+async def test_work_shouts_strict(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("work_shouts.json"))
+    async with make_client() as sc:
+        with pytest.raises(ParseError):
+            _ = [s async for s in sc.work_shouts(45424060, strict=True)]
+
+
+@respx.mock
 async def test_topchart(load_fixture: Any) -> None:
     route = respx.post(GRAPHQL_URL)
     route.respond(json=load_fixture("topchart.json"))

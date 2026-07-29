@@ -1,0 +1,23 @@
+{
+ "data": {
+  "product": {
+   "reviews": {
+    "total": 3,
+    "items": [
+     {
+      "id": 301955219,
+      "title": "Ensablement d'un blockbuster d'auteur",
+      "url": "/film/dune_deuxieme_partie/critique/301955219",
+      "body": "\nDenis Villeneuve est probablement un garçon bien élevé, un être poli, qui s&#39;est fait un devoir ",
+      "bodyText": "<p>Denis Villeneuve est probablement un garçon bien élevé, un être poli, qui s&#39;est fait un devoi",
+      "rating": 5,
+      "dateCreation": "2024-02-28T14:49:13.000Z",
+      "author": {
+       "username": "Yoshii"
+      }
+     }
+    ]
+   }
+  }
+ }
+}

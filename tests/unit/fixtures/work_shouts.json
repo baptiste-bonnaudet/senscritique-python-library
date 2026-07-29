@@ -1,0 +1,38 @@
+{
+ "data": {
+  "product": {
+   "shouts": {
+    "total": 3,
+    "items": [
+     {
+      "id": 397332,
+      "body": "Pourquoi ça s’appelle pas « de deux » ?",
+      "rating": null,
+      "dateCreation": "2021-10-24T14:14:13.000Z",
+      "likeCount": 109,
+      "url": "/activity/242960091",
+      "author": {
+       "username": "mikeopuvty"
+      }
+     },
+     {
+      "id": 504753,
+      "body": "Je n'ai pas ressenti un tel amour pour une saga depuis Le Seigneur des Anneaux.",
+      "rating": null,
+      "dateCreation": "2024-03-05T19:41:50.000Z",
+      "likeCount": 30,
+      "url": "/activity/284927812",
+      "author": {
+       "username": "Fladnag59"
+      }
+     },
+     {
+      "id": null,
+      "body": "broken",
+      "author": null
+     }
+    ]
+   }
+  }
+ }
+}
