@@ -141,3 +141,6 @@ dmypy.json
 cython_debug/
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Python
+
+# Claude Code local settings
+.claude/settings.local.json
