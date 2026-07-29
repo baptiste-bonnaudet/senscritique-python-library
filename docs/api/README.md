@@ -64,5 +64,7 @@ live-verified mapping is recorded in the repo `ROADMAP.md`.
 - [users.md](users.md): `user(username:)`, `searchUserExplorer`
 - [work-details.md](work-details.md): `product(id:)`
 - [work-listings.md](work-listings.md): `Product.reviews`, `Product.shouts`
+- [lists.md](lists.md): `userList(id:)`, `searchListExplorer`, `getTop10`
+- [polls.md](polls.md): `poll(id:)`, `polls`, `topPolls`, `searchPollExplorer`
 - [topchart.md](topchart.md): `top(universe:, subtype:)`
 - [review.md](review.md): `review(id:)`

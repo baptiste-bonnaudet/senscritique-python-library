@@ -1,0 +1,25 @@
+{
+ "data": {
+  "userList": {
+   "productsList": {
+    "total": 3,
+    "items": [
+     {
+      "position": 3,
+      "annotation": "Sombre, intense, shakespearien... \n\n⊛ (Préférez la version d'origine avec son wa",
+      "product": {
+       "id": 442615,
+       "title": "L'Empire contre-attaque",
+       "originalTitle": "Star Wars Episode V: The Empire Strikes Back",
+       "yearOfProduction": 1980,
+       "universe": 1,
+       "url": "/film/l_empire_contre_attaque/442615",
+       "slug": "l_empire_contre_attaque",
+       "rating": 8.1
+      }
+     }
+    ]
+   }
+  }
+ }
+}

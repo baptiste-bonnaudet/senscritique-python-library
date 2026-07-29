@@ -22,6 +22,11 @@ from .models import (
     BulkResult,
     CollectionAction,
     CollectionSort,
+    ListItem,
+    ListSearchHit,
+    ListSummary,
+    PollSearchHit,
+    PollSummary,
     Review,
     ReviewFilter,
     ReviewSort,
@@ -294,3 +299,106 @@ class SensCritiqueSync:
 
     def review(self, url_or_id: int | str) -> Review:
         return self._call(self._client.review(url_or_id))
+
+    def list_details(self, id_or_url: int | str) -> ListSummary:
+        return self._call(self._client.list_details(id_or_url))
+
+    def list_items(
+        self,
+        id_or_url: int | str,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> Iterator[ListItem]:
+        return self._iterate(
+            self._client.list_items(id_or_url, strict=strict, page_size=page_size)
+        )
+
+    def list_items_all(
+        self,
+        id_or_url: int | str,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[ListItem]:
+        return self._call(
+            self._client.list_items_all(
+                id_or_url, strict=strict, page_size=page_size
+            )
+        )
+
+    def search_lists(
+        self,
+        query: str,
+        *,
+        limit: int = 10,
+        offset: int = 0,
+        strict: bool = False,
+    ) -> list[ListSearchHit]:
+        return self._call(
+            self._client.search_lists(
+                query, limit=limit, offset=offset, strict=strict
+            )
+        )
+
+    def top10_list(self, universe: Universe | str = Universe.MOVIE) -> ListSummary:
+        return self._call(self._client.top10_list(universe))
+
+    def poll(self, id_or_url: int | str) -> PollSummary:
+        return self._call(self._client.poll(id_or_url))
+
+    def poll_works(
+        self,
+        id_or_url: int | str,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> Iterator[WorkSummary]:
+        return self._iterate(
+            self._client.poll_works(id_or_url, strict=strict, page_size=page_size)
+        )
+
+    def poll_works_all(
+        self,
+        id_or_url: int | str,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        return self._call(
+            self._client.poll_works_all(
+                id_or_url, strict=strict, page_size=page_size
+            )
+        )
+
+    def top_polls(self, *, strict: bool = False) -> list[PollSummary]:
+        return self._call(self._client.top_polls(strict=strict))
+
+    def polls(
+        self,
+        universe: Universe | str | None = None,
+        *,
+        limit: int = 10,
+        offset: int = 0,
+        sort_by: str | None = None,
+        strict: bool = False,
+    ) -> list[PollSummary]:
+        return self._call(
+            self._client.polls(
+                universe, limit=limit, offset=offset, sort_by=sort_by, strict=strict
+            )
+        )
+
+    def search_polls(
+        self,
+        query: str,
+        *,
+        limit: int = 10,
+        offset: int = 0,
+        strict: bool = False,
+    ) -> list[PollSearchHit]:
+        return self._call(
+            self._client.search_polls(
+                query, limit=limit, offset=offset, strict=strict
+            )
+        )

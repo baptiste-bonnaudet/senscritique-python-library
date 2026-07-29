@@ -1,0 +1,39 @@
+{
+ "data": {
+  "searchPollExplorer": {
+   "total": 388,
+   "items": [
+    {
+     "id": 2598261,
+     "fields": {
+      "title": "Les meilleurs animes de 2020",
+      "url": "https://www.senscritique.com/top/resultats/top_des_animes_de_2020/2598261",
+      "universe": "tvShow",
+      "description": "",
+      "cover": "https://media.senscritique.com/media/000019151709/400x100/cover.jpg"
+     }
+    },
+    {
+     "id": 2582699,
+     "fields": {
+      "title": "Les meilleurs jeux vidéo de 2020",
+      "url": "https://www.senscritique.com/top/resultats/les_meilleurs_jeux_video_de_2020/2582699",
+      "universe": "game",
+      "description": "",
+      "cover": "https://media.senscritique.com/media/000019900519/400x100/cover.jpg"
+     }
+    },
+    {
+     "id": 2582689,
+     "fields": {
+      "title": "Les meilleurs albums de 2020",
+      "url": "https://www.senscritique.com/top/resultats/les_meilleurs_albums_de_2020/2582689",
+      "universe": "musicAlbum",
+      "description": "",
+      "cover": "https://media.senscritique.com/media/000019548893/400x100/cover.jpg"
+     }
+    }
+   ]
+  }
+ }
+}

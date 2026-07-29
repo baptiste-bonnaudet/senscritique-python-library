@@ -214,6 +214,85 @@ class Review(BaseModel):
     date_created: datetime.datetime | None = None
 
 
+class ListSummary(BaseModel):
+    """A user-made (or official) list, without its items.
+
+    ``universe_id`` is the API's numeric universe, kept raw because lists
+    exist for universes the library does not map.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    label: str
+    description: str | None = None
+    url: str | None = None
+    universe_id: int | None = None
+    is_official: bool = False
+    is_ordered: bool = False
+    is_private: bool = False
+    product_count: int | None = None
+    author_username: str | None = None
+    date_created: datetime.datetime | None = None
+    date_last_update: datetime.datetime | None = None
+
+
+class ListSearchHit(BaseModel):
+    """One result of a list search."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    title: str
+    url: str | None = None
+    backdrop_url: str | None = None
+    like_count: int | None = None
+    universe_id: int | None = None
+    product_count: int | None = None
+    author_username: str | None = None
+
+
+class ListItem(BaseModel):
+    """One entry of a list: a work plus its position and annotation."""
+
+    model_config = ConfigDict(frozen=True)
+
+    work: WorkSummary
+    position: int | None = None
+    annotation: str | None = None
+
+
+class PollSummary(BaseModel):
+    """A poll ("top" survey), without its ranked works."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    label: str
+    description: str | None = None
+    url: str | None = None
+    universe_id: int | None = None
+    answers_count: int | None = None
+    participation_count: int | None = None
+
+
+class PollSearchHit(BaseModel):
+    """One result of a poll search.
+
+    Unlike everywhere else, the search index returns ``universe`` as the API
+    string (``"movie"``...), kept as-is.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    title: str
+    url: str | None = None
+    universe: str | None = None
+    description: str | None = None
+    cover_url: str | None = None
+
+
 class WorkStats(BaseModel):
     """Aggregate user-action counters of a work."""
 

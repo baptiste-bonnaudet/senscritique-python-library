@@ -12,6 +12,11 @@ from ._parse import (
     extract_numeric_id,
     parse_autocomplete_hit,
     parse_collection_item,
+    parse_list_item,
+    parse_list_search_hit,
+    parse_list_summary,
+    parse_poll_search_hit,
+    parse_poll_summary,
     parse_review,
     parse_shout,
     parse_user_profile,
@@ -22,8 +27,17 @@ from ._parse import (
 from ._queries import (
     AUTOCOMPLETE,
     COLLECTION,
+    LIST_DETAILS,
+    LIST_ITEMS,
+    LIST_SEARCH,
+    POLL_DETAILS,
+    POLL_SEARCH,
+    POLL_WORKS,
+    POLLS,
     REVIEW,
     SEARCH,
+    TOP10_LIST,
+    TOP_POLLS,
     TOPCHART,
     USER_PROFILE,
     USER_SEARCH,
@@ -40,6 +54,11 @@ from .models import (
     BulkResult,
     CollectionAction,
     CollectionSort,
+    ListItem,
+    ListSearchHit,
+    ListSummary,
+    PollSearchHit,
+    PollSummary,
     Review,
     ReviewFilter,
     ReviewSort,
@@ -525,6 +544,254 @@ class SensCritique:
             page_size,
         )
         return await self._collect_items(payloads, parse_shout, strict)
+
+    # -- lists --------------------------------------------------------------
+
+    async def list_details(self, id_or_url: int | str) -> ListSummary:
+        """Fetch a list's metadata (label, author, counts) without items."""
+        list_id = extract_numeric_id(id_or_url, kind="list")
+        data = await self._transport.graphql(
+            "ListDetails", LIST_DETAILS, {"id": list_id}
+        )
+        payload = data.get("userList")
+        if payload is None:
+            raise ParseError(
+                f"no list in response for id {list_id} (unknown id?)",
+                payload=data,
+            )
+        return parse_list_summary(payload)
+
+    async def _list_item_payloads(
+        self, list_id: int, page_size: int
+    ) -> AsyncIterator[dict[str, Any]]:
+        offset = 0
+        while True:
+            data = await self._transport.graphql(
+                "ListItems",
+                LIST_ITEMS,
+                {"id": list_id, "limit": page_size, "offset": offset},
+            )
+            payload = data.get("userList")
+            if payload is None:
+                raise ParseError(
+                    f"no list in response for id {list_id} (unknown id?)",
+                    payload=data,
+                )
+            listing = payload.get("productsList") or {}
+            total = listing.get("total") or 0
+            items = listing.get("items") or []
+            for item in items:
+                yield item
+            offset += len(items)
+            if not items or offset >= total:
+                return
+
+    def list_items(
+        self,
+        id_or_url: int | str,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> AsyncIterator[ListItem]:
+        """Iterate over a list's items (work, position, annotation)."""
+        payloads = self._list_item_payloads(
+            extract_numeric_id(id_or_url, kind="list"), page_size
+        )
+        return self._lenient_items(payloads, parse_list_item, "list item", strict)
+
+    async def list_items_all(
+        self,
+        id_or_url: int | str,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[ListItem]:
+        """Collect all items of a list, with a structured error report."""
+        payloads = self._list_item_payloads(
+            extract_numeric_id(id_or_url, kind="list"), page_size
+        )
+        return await self._collect_items(payloads, parse_list_item, strict)
+
+    async def search_lists(
+        self,
+        query: str,
+        *,
+        limit: int = 10,
+        offset: int = 0,
+        strict: bool = False,
+    ) -> list[ListSearchHit]:
+        """Search lists by title."""
+        data = await self._transport.graphql(
+            "SearchLists",
+            LIST_SEARCH,
+            {"query": query, "limit": limit, "offset": offset},
+        )
+        explorer = data.get("searchListExplorer") or {}
+        hits: list[ListSearchHit] = []
+        for payload in explorer.get("items") or []:
+            try:
+                hits.append(parse_list_search_hit(payload))
+            except ParseError as exc:
+                if strict:
+                    raise
+                logger.warning(
+                    "skipping malformed list search result",
+                    extra={"query": query, "error": str(exc)},
+                )
+        return hits
+
+    async def top10_list(
+        self, universe: Universe | str = Universe.MOVIE
+    ) -> ListSummary:
+        """Fetch the site's aggregated "Top 100 of Top 10s" list metadata.
+
+        Use :meth:`list_items` with the returned id to read its entries.
+        """
+        data = await self._transport.graphql(
+            "GetTop10", TOP10_LIST, {"universe": coerce_universe(universe).value}
+        )
+        payload = data.get("getTop10")
+        if payload is None:
+            raise ParseError("no list in getTop10 response", payload=data)
+        return parse_list_summary(payload)
+
+    # -- polls --------------------------------------------------------------
+
+    async def poll(self, id_or_url: int | str) -> PollSummary:
+        """Fetch a poll's metadata without its ranked works."""
+        poll_id = extract_numeric_id(id_or_url, kind="poll")
+        data = await self._transport.graphql(
+            "PollDetails", POLL_DETAILS, {"id": poll_id}
+        )
+        payload = data.get("poll")
+        if payload is None:
+            raise ParseError(
+                f"no poll in response for id {poll_id} (unknown id?)",
+                payload=data,
+            )
+        return parse_poll_summary(payload)
+
+    async def _poll_work_payloads(
+        self, poll_id: int, page_size: int
+    ) -> AsyncIterator[dict[str, Any]]:
+        # Poll.products exposes no total; stop on the first short page.
+        offset = 0
+        while True:
+            data = await self._transport.graphql(
+                "PollWorks",
+                POLL_WORKS,
+                {"id": poll_id, "limit": page_size, "offset": offset},
+            )
+            payload = data.get("poll")
+            if payload is None:
+                raise ParseError(
+                    f"no poll in response for id {poll_id} (unknown id?)",
+                    payload=data,
+                )
+            items = payload.get("products") or []
+            for item in items:
+                yield item
+            if len(items) < page_size:
+                return
+            offset += len(items)
+
+    def poll_works(
+        self,
+        id_or_url: int | str,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> AsyncIterator[WorkSummary]:
+        """Iterate over a poll's ranked works."""
+        payloads = self._poll_work_payloads(
+            extract_numeric_id(id_or_url, kind="poll"), page_size
+        )
+        return self._lenient_items(payloads, parse_work_summary, "poll work", strict)
+
+    async def poll_works_all(
+        self,
+        id_or_url: int | str,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        """Collect all ranked works of a poll, with an error report."""
+        payloads = self._poll_work_payloads(
+            extract_numeric_id(id_or_url, kind="poll"), page_size
+        )
+        return await self._collect_items(payloads, parse_work_summary, strict)
+
+    async def top_polls(self, *, strict: bool = False) -> list[PollSummary]:
+        """Fetch the currently featured polls."""
+        data = await self._transport.graphql("TopPolls", TOP_POLLS, {})
+        return self._parse_poll_list(data.get("topPolls") or [], strict)
+
+    async def polls(
+        self,
+        universe: Universe | str | None = None,
+        *,
+        limit: int = 10,
+        offset: int = 0,
+        sort_by: str | None = None,
+        strict: bool = False,
+    ) -> list[PollSummary]:
+        """Browse polls, optionally by universe.
+
+        ``sort_by`` is one of the API's ``PollSortBy`` values (``ALL``,
+        ``NEW``, ``COMPLETE``, ``INCOMPLETE``, ``NOT_STARTED``); completion
+        states are meaningless without auth.
+        """
+        variables: dict[str, Any] = {"limit": limit, "offset": offset}
+        if universe is not None:
+            variables["universe"] = coerce_universe(universe).value
+        if sort_by is not None:
+            variables["sortBy"] = sort_by
+        data = await self._transport.graphql("PollsList", POLLS, variables)
+        payload = data.get("polls") or {}
+        return self._parse_poll_list(payload.get("items") or [], strict)
+
+    def _parse_poll_list(
+        self, payloads: list[dict[str, Any]], strict: bool
+    ) -> list[PollSummary]:
+        results: list[PollSummary] = []
+        for payload in payloads:
+            try:
+                results.append(parse_poll_summary(payload))
+            except ParseError as exc:
+                if strict:
+                    raise
+                logger.warning(
+                    "skipping malformed poll", extra={"error": str(exc)}
+                )
+        return results
+
+    async def search_polls(
+        self,
+        query: str,
+        *,
+        limit: int = 10,
+        offset: int = 0,
+        strict: bool = False,
+    ) -> list[PollSearchHit]:
+        """Search polls by title."""
+        data = await self._transport.graphql(
+            "SearchPolls",
+            POLL_SEARCH,
+            {"query": query, "limit": limit, "offset": offset},
+        )
+        explorer = data.get("searchPollExplorer") or {}
+        hits: list[PollSearchHit] = []
+        for payload in explorer.get("items") or []:
+            try:
+                hits.append(parse_poll_search_hit(payload))
+            except ParseError as exc:
+                if strict:
+                    raise
+                logger.warning(
+                    "skipping malformed poll search result",
+                    extra={"query": query, "error": str(exc)},
+                )
+        return hits
 
     # -- topchart -----------------------------------------------------------
 

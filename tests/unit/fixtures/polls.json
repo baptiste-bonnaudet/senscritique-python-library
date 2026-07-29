@@ -1,0 +1,33 @@
+{
+ "data": {
+  "polls": {
+   "total": 2365,
+   "items": [
+    {
+     "id": 4238470,
+     "label": "Les meilleurs films de 2026",
+     "url": "/top/resultats/les_meilleurs_films_de_2026/4238470",
+     "universe": 1,
+     "answersCount": null,
+     "participationCount": 2318
+    },
+    {
+     "id": 3996052,
+     "label": "Les meilleurs films de 2025",
+     "url": "/top/resultats/les_meilleurs_films_de_2025/3996052",
+     "universe": 1,
+     "answersCount": null,
+     "participationCount": 4390
+    },
+    {
+     "id": 646553,
+     "label": "Les meilleurs films de Christopher Nolan",
+     "url": "/top/resultats/les_meilleurs_films_de_christopher_nolan/646553",
+     "universe": 1,
+     "answersCount": null,
+     "participationCount": 4563
+    }
+   ]
+  }
+ }
+}

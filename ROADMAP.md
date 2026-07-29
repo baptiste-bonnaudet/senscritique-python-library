@@ -37,6 +37,22 @@ Notes:
   and unmapped-universe `ParseError` skips (e.g. comics in autocomplete
   results) disappear on their own.
 
+## Tier 5: browse/discovery + people (not started)
+
+The last planned v0.2 tier, stopped before implementation on request:
+`genres` + `genreProducts`, `productsByRelease/Month/Week`, `groupProducts`
+(franchise contents), `streamingExplorer` + `providers()`,
+`discoverProducts`, and people (`contact(id:)`, `searchContact` /
+`searchContactExplorer`). Contract notes live in the local handoff doc.
+Also still pending from the original plan: a README API table refresh and
+one cheap live-canary call per new operation family.
+
+## listFullItemsMinimal (needs auth)
+
+`listFullItemsMinimal(listId:)` (cheap full list dump: id/position/title)
+rejects unauthenticated callers with `auth/unauthenticated-user` (verified
+live 2026-07-29). The paged `list_items` covers the need meanwhile.
+
 ## versus (needs auth)
 
 `versus(username:, universe:)` compares the logged-in user against another

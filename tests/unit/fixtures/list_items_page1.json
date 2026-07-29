@@ -1,0 +1,39 @@
+{
+ "data": {
+  "userList": {
+   "productsList": {
+    "total": 3,
+    "items": [
+     {
+      "position": 1,
+      "annotation": "Dépassant la vision proposée d'un néolibéralisme désenchanté, et le rappel au co",
+      "product": {
+       "id": 494050,
+       "title": "Blade Runner",
+       "originalTitle": null,
+       "yearOfProduction": 1982,
+       "universe": 1,
+       "url": "/film/blade_runner/494050",
+       "slug": "blade_runner",
+       "rating": 7.9
+      }
+     },
+     {
+      "position": 2,
+      "annotation": "La vie, de la naissance jusqu'à la renaissance. Chef-d'oeuvre. ",
+      "product": {
+       "id": 475251,
+       "title": "2001 : L'Odyssée de l'espace",
+       "originalTitle": "2001: A Space Odyssey",
+       "yearOfProduction": 1968,
+       "universe": 1,
+       "url": "/film/2001_l_odyssee_de_l_espace/475251",
+       "slug": "2001_l_odyssee_de_l_espace",
+       "rating": 7.9
+      }
+     }
+    ]
+   }
+  }
+ }
+}

@@ -18,6 +18,11 @@ from .models import (
     CollectionAction,
     ContactSummary,
     Franchise,
+    ListItem,
+    ListSearchHit,
+    ListSummary,
+    PollSearchHit,
+    PollSummary,
     Provider,
     RatingHistogram,
     Review,
@@ -310,6 +315,101 @@ def parse_work_details(payload: dict[str, Any]) -> WorkDetails:
     except (KeyError, TypeError, ValidationError) as exc:
         raise ParseError(
             f"invalid work details payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def parse_list_summary(payload: dict[str, Any]) -> ListSummary:
+    try:
+        author = payload.get("author") or {}
+        return ListSummary(
+            id=payload["id"],
+            label=payload["label"],
+            description=payload.get("description"),
+            url=payload.get("url"),
+            universe_id=payload.get("universe"),
+            is_official=bool(payload.get("isOfficial", False)),
+            is_ordered=bool(payload.get("isOrdered", False)),
+            is_private=bool(payload.get("isPrivate", False)),
+            product_count=payload.get("productCount"),
+            author_username=author.get("username"),
+            date_created=parse_datetime(payload.get("dateCreation")),
+            date_last_update=parse_datetime(payload.get("dateLastUpdate")),
+        )
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid list payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def parse_list_item(payload: dict[str, Any]) -> ListItem:
+    product = payload.get("product")
+    if not isinstance(product, dict):
+        raise ParseError(
+            "list item has no product", payload=_snippet(payload)
+        )
+    try:
+        return ListItem(
+            work=parse_work_summary(product),
+            position=payload.get("position"),
+            annotation=payload.get("annotation"),
+        )
+    except (TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid list item payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def parse_list_search_hit(payload: dict[str, Any]) -> ListSearchHit:
+    try:
+        nested = payload.get("list") or {}
+        author = nested.get("author") or {}
+        return ListSearchHit(
+            id=payload["id"],
+            title=payload["title"],
+            url=payload.get("url"),
+            backdrop_url=payload.get("backdrop"),
+            like_count=payload.get("like_count"),
+            universe_id=nested.get("universe"),
+            product_count=nested.get("productCount"),
+            author_username=author.get("username"),
+        )
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid list search payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def parse_poll_summary(payload: dict[str, Any]) -> PollSummary:
+    try:
+        return PollSummary(
+            id=payload["id"],
+            label=payload["label"],
+            description=payload.get("description"),
+            url=payload.get("url"),
+            universe_id=payload.get("universe"),
+            answers_count=payload.get("answersCount"),
+            participation_count=payload.get("participationCount"),
+        )
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid poll payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def parse_poll_search_hit(payload: dict[str, Any]) -> PollSearchHit:
+    try:
+        fields = payload.get("fields") or {}
+        return PollSearchHit(
+            id=payload["id"],
+            title=fields["title"],
+            url=fields.get("url"),
+            universe=fields.get("universe"),
+            description=fields.get("description") or None,
+            cover_url=fields.get("cover"),
+        )
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid poll search payload: {exc}", payload=_snippet(payload)
         ) from exc
 
 

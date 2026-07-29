@@ -404,6 +404,122 @@ async def test_topchart(load_fixture: Any) -> None:
 
 
 @respx.mock
+async def test_list_details(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("list_details.json"))
+    async with make_client() as sc:
+        details = await sc.list_details(
+            "https://www.senscritique.com/liste/some_list/54812"
+        )
+    assert details.id == 54812
+    assert details.universe_id == 1
+    assert details.is_ordered is True
+    assert details.is_official is False
+    assert details.product_count == 111
+    assert details.author_username == "MilOvni"
+
+
+@respx.mock
+async def test_list_details_unknown_id() -> None:
+    respx.post(GRAPHQL_URL).respond(json={"data": {"userList": None}})
+    async with make_client() as sc:
+        with pytest.raises(ParseError, match="unknown id"):
+            await sc.list_details(999999999)
+
+
+@respx.mock
+async def test_list_items_paginates(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.side_effect = [
+        httpx.Response(200, json=load_fixture("list_items_page1.json")),
+        httpx.Response(200, json=load_fixture("list_items_page2.json")),
+    ]
+    async with make_client() as sc:
+        items = [item async for item in sc.list_items(54812, page_size=2)]
+    assert [i.position for i in items] == [1, 2, 3]
+    assert items[0].work.id == 494050
+    assert items[0].annotation is not None
+    assert graphql_variables(route.calls[1].request)["offset"] == 2
+
+
+@respx.mock
+async def test_search_lists(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("list_search.json"))
+    async with make_client() as sc:
+        hits = await sc.search_lists("science fiction", limit=2)
+    assert hits[0].id == 54812
+    assert hits[0].like_count == 442
+    assert hits[0].universe_id == 1
+    assert hits[0].product_count == 111
+    assert hits[0].author_username == "MilOvni"
+
+
+@respx.mock
+async def test_top10_list(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("top10_list.json"))
+    async with make_client() as sc:
+        details = await sc.top10_list("movie")
+    assert details.id == 180
+    assert details.label == "Top 100 films des Tops 10"
+    assert details.author_username == "senscritique"
+    assert graphql_variables(route.calls[0].request)["universe"] == "movie"
+
+
+@respx.mock
+async def test_poll_details(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("poll_details.json"))
+    async with make_client() as sc:
+        poll = await sc.poll(2582684)
+    assert poll.id == 2582684
+    assert poll.label == "Les meilleures séries de 2020"
+    assert poll.universe_id == 4
+    assert poll.participation_count is not None
+
+
+@respx.mock
+async def test_poll_works(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("poll_works.json"))
+    async with make_client() as sc:
+        result = await sc.poll_works_all(2582684)
+    # One short page (3 < default page size) stops the iteration.
+    assert len(route.calls) == 1
+    assert [w.id for w in result.items] == [39032081, 39579996, 35141553]
+    assert result.ok
+
+
+@respx.mock
+async def test_polls_universe_variable(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("polls.json"))
+    async with make_client() as sc:
+        polls = await sc.polls("movie", limit=3)
+    assert polls[0].id == 4238470
+    assert polls[0].universe_id == 1
+    assert graphql_variables(route.calls[0].request)["universe"] == "movie"
+
+
+@respx.mock
+async def test_top_polls(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("top_polls.json"))
+    async with make_client() as sc:
+        polls = await sc.top_polls()
+    assert len(polls) == 2
+    assert {p.universe_id for p in polls} == {4, 1}
+
+
+@respx.mock
+async def test_search_polls(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("poll_search.json"))
+    async with make_client() as sc:
+        hits = await sc.search_polls("2020", limit=3)
+    assert hits[0].title == "Les meilleurs animes de 2020"
+    # Poll search returns universe as the API string, kept raw.
+    assert [h.universe for h in hits] == ["tvShow", "game", "musicAlbum"]
+    assert hits[0].url is not None and hits[0].url.startswith("https://")
+
+
+@respx.mock
 async def test_review(load_fixture: Any) -> None:
     respx.post(GRAPHQL_URL).respond(json=load_fixture("review.json"))
     async with make_client() as sc:

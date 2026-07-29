@@ -68,6 +68,157 @@ query SearchProducts(
 """
 )
 
+_LIST_SUMMARY_FIELDS = """
+    id
+    label
+    description
+    url
+    universe
+    isOfficial
+    isOrdered
+    isPrivate
+    productCount
+    dateCreation
+    dateLastUpdate
+    author { username }
+"""
+
+LIST_DETAILS = (
+    """
+query ListDetails($id: Int!) {
+  userList(id: $id) {
+"""
+    + _LIST_SUMMARY_FIELDS
+    + """
+  }
+}
+"""
+)
+
+LIST_ITEMS = (
+    """
+query ListItems($id: Int!, $limit: Int, $offset: Int) {
+  userList(id: $id) {
+    productsList(limit: $limit, offset: $offset) {
+      total
+      items {
+        position
+        annotation
+        product {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+        }
+      }
+    }
+  }
+}
+"""
+)
+
+LIST_SEARCH = """
+query SearchLists($query: String, $limit: Int, $offset: Int) {
+  searchListExplorer(query: $query, limit: $limit, offset: $offset) {
+    total
+    items {
+      id
+      title
+      url
+      backdrop
+      like_count
+      list { universe productCount author { username } }
+    }
+  }
+}
+"""
+
+TOP10_LIST = (
+    """
+query GetTop10($universe: String) {
+  getTop10(universe: $universe) {
+"""
+    + _LIST_SUMMARY_FIELDS
+    + """
+  }
+}
+"""
+)
+
+_POLL_SUMMARY_FIELDS = """
+    id
+    label
+    description
+    url
+    universe
+    answersCount
+    participationCount
+"""
+
+POLL_DETAILS = (
+    """
+query PollDetails($id: Int!) {
+  poll(id: $id) {
+"""
+    + _POLL_SUMMARY_FIELDS
+    + """
+  }
+}
+"""
+)
+
+POLL_WORKS = (
+    """
+query PollWorks($id: Int!, $limit: Int, $offset: Int) {
+  poll(id: $id) {
+    products(limit: $limit, offset: $offset) {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+    }
+  }
+}
+"""
+)
+
+TOP_POLLS = (
+    """
+query TopPolls {
+  topPolls {
+"""
+    + _POLL_SUMMARY_FIELDS
+    + """
+  }
+}
+"""
+)
+
+POLLS = (
+    """
+query PollsList($universe: String, $limit: Int, $offset: Int, $sortBy: PollSortBy) {
+  polls(universe: $universe, limit: $limit, offset: $offset, sortBy: $sortBy) {
+    total
+    items {
+"""
+    + _POLL_SUMMARY_FIELDS
+    + """
+    }
+  }
+}
+"""
+)
+
+POLL_SEARCH = """
+query SearchPolls($query: String, $limit: Int, $offset: Int) {
+  searchPollExplorer(query: $query, limit: $limit, offset: $offset) {
+    total
+    items {
+      id
+      fields { title url universe description cover }
+    }
+  }
+}
+"""
+
 USER_PROFILE = """
 query UserProfile($username: String) {
   user(username: $username) {

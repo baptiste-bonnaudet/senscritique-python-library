@@ -1,0 +1,38 @@
+{
+ "data": {
+  "poll": {
+   "products": [
+    {
+     "id": 39032081,
+     "title": "Le Jeu de la dame",
+     "originalTitle": "The Queen’s Gambit",
+     "yearOfProduction": null,
+     "universe": 4,
+     "url": "/serie/le_jeu_de_la_dame/39032081",
+     "slug": "le_jeu_de_la_dame",
+     "rating": 7.6
+    },
+    {
+     "id": 39579996,
+     "title": "Unorthodox",
+     "originalTitle": null,
+     "yearOfProduction": null,
+     "universe": 4,
+     "url": "/serie/unorthodox/39579996",
+     "slug": "unorthodox",
+     "rating": 7.4
+    },
+    {
+     "id": 35141553,
+     "title": "The Last Dance",
+     "originalTitle": null,
+     "yearOfProduction": null,
+     "universe": 4,
+     "url": "/serie/the_last_dance/35141553",
+     "slug": "the_last_dance",
+     "rating": 8.1
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "data": {
+  "searchListExplorer": {
+   "total": 2621,
+   "items": [
+    {
+     "id": 54812,
+     "title": "' La science-fiction, cette pornographie des idées. ' ™ - Sélec de films SF",
+     "url": "https://www.senscritique.com/liste/la_science_fiction_cette_pornographie_des_idees_selec_de_fil/54812",
+     "backdrop": "https://media.senscritique.com/media/000018820341/400x100/backdrop.jpg",
+     "like_count": 442,
+     "list": {
+      "universe": 1,
+      "productCount": 111,
+      "author": {
+       "username": "MilOvni"
+      }
+     }
+    },
+    {
+     "id": 33918,
+     "title": "Top 30 Science-Fiction du nouveau millénaire",
+     "url": "https://www.senscritique.com/liste/top_30_science_fiction_du_nouveau_millenaire/33918",
+     "backdrop": "https://media.senscritique.com/media/000004499366/400x100/backdrop.jpg",
+     "like_count": 243,
+     "list": {
+      "universe": 1,
+      "productCount": 31,
+      "author": {
+       "username": "drélium"
+      }
+     }
+    }
+   ]
+  }
+ }
+}
