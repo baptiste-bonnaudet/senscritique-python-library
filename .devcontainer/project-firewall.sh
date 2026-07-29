@@ -9,7 +9,7 @@
 #
 # Domains are resolved to IPs once, when this runs. If a CDN rotates IPs and a
 # host becomes unreachable mid-session, just re-run it:
-#   sudo /usr/local/bin/init-firewall.sh
+#   sudo /usr/local/bin/project-firewall.sh
 set -euo pipefail
 IFS=$'\n\t'
 
