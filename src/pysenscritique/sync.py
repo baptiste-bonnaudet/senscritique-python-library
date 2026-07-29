@@ -18,6 +18,7 @@ import httpx
 from ._transport import RateLimit, RetryConfig
 from .client import DEFAULT_PAGE_SIZE, SensCritique
 from .models import (
+    AutocompleteHit,
     BulkResult,
     CollectionAction,
     Review,
@@ -141,6 +142,18 @@ class SensCritiqueSync:
             self._client.search(
                 query, universe, limit=limit, offset=offset, strict=strict
             )
+        )
+
+    def autocomplete(
+        self,
+        keywords: str,
+        universe: Universe | str | None = None,
+        *,
+        limit: int = 10,
+        strict: bool = False,
+    ) -> list[AutocompleteHit]:
+        return self._call(
+            self._client.autocomplete(keywords, universe, limit=limit, strict=strict)
         )
 
     def work_details(self, id_or_url: int | str) -> WorkDetails:

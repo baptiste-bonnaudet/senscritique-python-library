@@ -1,0 +1,47 @@
+{
+  "data": {
+    "searchAutocomplete": {
+      "total": 6,
+      "items": [
+        {
+          "product": null,
+          "contact": {
+            "id": 993,
+            "name": "Steven Spielberg",
+            "url": "/contact/steven_spielberg/993"
+          }
+        },
+        {
+          "product": {
+            "id": 27191569,
+            "title": "Spielberg",
+            "originalTitle": null,
+            "yearOfProduction": 2019,
+            "universe": 1,
+            "url": "/film/spielberg/27191569",
+            "slug": "spielberg",
+            "rating": 7.5
+          },
+          "contact": null
+        },
+        {
+          "product": {
+            "id": 124776066,
+            "title": "Spielberg",
+            "originalTitle": null,
+            "yearOfProduction": 2025,
+            "universe": 6,
+            "url": "/bd/spielberg/124776066",
+            "slug": "spielberg",
+            "rating": 7.7
+          },
+          "contact": null
+        },
+        {
+          "product": null,
+          "contact": null
+        }
+      ]
+    }
+  }
+}

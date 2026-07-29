@@ -13,9 +13,11 @@ from .errors import (
     UserNotFoundError,
 )
 from .models import (
+    AutocompleteHit,
     BulkError,
     BulkResult,
     CollectionAction,
+    ContactSummary,
     Review,
     TopChartEntry,
     Universe,
@@ -31,9 +33,11 @@ except PackageNotFoundError:  # pragma: no cover - not installed
     __version__ = "0.0.0"
 
 __all__ = [
+    "AutocompleteHit",
     "BulkError",
     "BulkResult",
     "CollectionAction",
+    "ContactSummary",
     "GraphQLError",
     "ParseError",
     "RateLimit",

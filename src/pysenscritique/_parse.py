@@ -13,7 +13,9 @@ from pydantic import ValidationError
 
 from .errors import ParseError
 from .models import (
+    AutocompleteHit,
     CollectionAction,
+    ContactSummary,
     Review,
     Universe,
     UserCollectionItem,
@@ -87,6 +89,33 @@ def parse_work_summary(payload: dict[str, Any]) -> WorkSummary:
         raise ParseError(
             f"invalid work payload: {exc}", payload=_snippet(payload)
         ) from exc
+
+
+def parse_contact_summary(payload: dict[str, Any]) -> ContactSummary:
+    try:
+        return ContactSummary(
+            id=payload["id"],
+            name=payload["name"],
+            url=payload.get("url"),
+        )
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid contact payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def parse_autocomplete_hit(payload: dict[str, Any]) -> AutocompleteHit:
+    product = payload.get("product")
+    contact = payload.get("contact")
+    if product is None and contact is None:
+        raise ParseError(
+            "autocomplete item has neither product nor contact",
+            payload=_snippet(payload),
+        )
+    return AutocompleteHit(
+        work=parse_work_summary(product) if product is not None else None,
+        contact=parse_contact_summary(contact) if contact is not None else None,
+    )
 
 
 def parse_collection_item(

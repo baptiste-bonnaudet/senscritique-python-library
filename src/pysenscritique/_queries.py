@@ -62,6 +62,24 @@ query SearchProducts(
 """
 )
 
+AUTOCOMPLETE = (
+    """
+query Autocomplete($keywords: String!, $limit: Int, $universe: String) {
+  searchAutocomplete(keywords: $keywords, limit: $limit, universe: $universe) {
+    total
+    items {
+      product {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+      }
+      contact { id name url }
+    }
+  }
+}
+"""
+)
+
 WORK_DETAILS = """
 query WorkDetails($id: Int!) {
   product(id: $id) {

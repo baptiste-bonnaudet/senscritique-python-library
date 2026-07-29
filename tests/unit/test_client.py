@@ -143,6 +143,44 @@ async def test_search_without_universe(load_fixture: Any) -> None:
 
 
 @respx.mock
+async def test_autocomplete(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("autocomplete.json"))
+    async with make_client() as sc:
+        hits = await sc.autocomplete("spielberg", limit=6)
+    # The unmapped-universe comic (universe 6) and the empty product/contact
+    # item are both skipped leniently.
+    assert len(hits) == 2
+    person, film = hits
+    assert person.work is None
+    assert person.contact is not None
+    assert person.contact.name == "Steven Spielberg"
+    assert film.contact is None
+    assert film.work is not None
+    assert film.work.universe is Universe.MOVIE
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["keywords"] == "spielberg"
+    assert "universe" not in variables
+
+
+@respx.mock
+async def test_autocomplete_strict_raises(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("autocomplete.json"))
+    async with make_client() as sc:
+        with pytest.raises(ParseError, match="unknown universe"):
+            await sc.autocomplete("spielberg", strict=True)
+
+
+@respx.mock
+async def test_autocomplete_universe_filter(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("autocomplete.json"))
+    async with make_client() as sc:
+        await sc.autocomplete("spielberg", universe="movie")
+    assert graphql_variables(route.calls[0].request)["universe"] == "movie"
+
+
+@respx.mock
 async def test_work_details(load_fixture: Any) -> None:
     respx.post(GRAPHQL_URL).respond(json=load_fixture("work_details.json"))
     async with make_client() as sc:

@@ -18,7 +18,8 @@ class Universe(StrEnum):
 
     Values are the strings the GraphQL API uses. ``numeric_id`` is the id used
     in site URLs (``?universe=N``). Movies and TV are the primary targets;
-    ``BOOK`` proves the architecture is not movie-shaped.
+    ``BOOK`` proves the architecture is not movie-shaped. The remaining
+    SensCritique universes are deliberately unmapped for now (see ROADMAP.md).
     """
 
     MOVIE = "movie"
@@ -64,6 +65,25 @@ class WorkSummary(BaseModel):
     def display_title(self) -> str:
         """Original title when known, else the (often French) local title."""
         return self.original_title or self.title
+
+
+class ContactSummary(BaseModel):
+    """A person (director, actor, author...) as referenced by works."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    name: str
+    url: str | None = None
+
+
+class AutocompleteHit(BaseModel):
+    """One autocomplete result: a work or a person, never both."""
+
+    model_config = ConfigDict(frozen=True)
+
+    work: WorkSummary | None = None
+    contact: ContactSummary | None = None
 
 
 class UserCollectionItem(BaseModel):

@@ -10,16 +10,18 @@ import httpx
 from ._parse import (
     coerce_universe,
     extract_numeric_id,
+    parse_autocomplete_hit,
     parse_collection_item,
     parse_review,
     parse_work_details,
     parse_work_summary,
 )
-from ._queries import COLLECTION, REVIEW, SEARCH, TOPCHART, WORK_DETAILS
+from ._queries import AUTOCOMPLETE, COLLECTION, REVIEW, SEARCH, TOPCHART, WORK_DETAILS
 from ._transport import AsyncTransport, RateLimit, RetryConfig
 from .errors import ParseError, UserNotFoundError
 from .logger import build_logger
 from .models import (
+    AutocompleteHit,
     BulkError,
     BulkResult,
     CollectionAction,
@@ -209,6 +211,36 @@ class SensCritique:
                     extra={"query": query, "error": str(exc)},
                 )
         return results
+
+    async def autocomplete(
+        self,
+        keywords: str,
+        universe: Universe | str | None = None,
+        *,
+        limit: int = 10,
+        strict: bool = False,
+    ) -> list[AutocompleteHit]:
+        """Instant-search suggestions: works and people mixed.
+
+        Each hit carries either ``work`` or ``contact``, never both.
+        """
+        variables: dict[str, Any] = {"keywords": keywords, "limit": limit}
+        if universe is not None:
+            variables["universe"] = coerce_universe(universe).value
+        data = await self._transport.graphql("Autocomplete", AUTOCOMPLETE, variables)
+        payload = data.get("searchAutocomplete") or {}
+        hits: list[AutocompleteHit] = []
+        for item in payload.get("items") or []:
+            try:
+                hits.append(parse_autocomplete_hit(item))
+            except ParseError as exc:
+                if strict:
+                    raise
+                logger.warning(
+                    "skipping malformed autocomplete item",
+                    extra={"keywords": keywords, "error": str(exc)},
+                )
+        return hits
 
     # -- work details -------------------------------------------------------
 
