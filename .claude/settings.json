@@ -8,7 +8,9 @@
     "allow": [
       "$defaults",
       "Python/uv development workflow: uv, make, pytest, ruff, mypy, and running probe/scratch scripts from the session scratchpad",
-      "Read-only GraphQL queries and introspection against senscritique.com and apollo.senscritique.com"
+      "Read-only GraphQL queries and introspection against senscritique.com and apollo.senscritique.com",
+      "Heredoc python one-liners (uv run python - <<EOF) for rate-limited API probes, including saving responses and writing test fixtures into the repo",
+      "sleep used to space out rate-limited API probes"
     ],
     "soft_deny": [
       "$defaults",
@@ -20,6 +22,7 @@
     "defaultMode": "auto",
     "allow": [
       "Bash(uv *)",
+      "Bash(sleep *)",
       "Bash(uvx *)",
       "Bash(make *)",
       "Bash(git *)",
