@@ -144,3 +144,7 @@ cython_debug/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Working docs kept local only
+docs/HANDOFF*.md
+docs/context/
