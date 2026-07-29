@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(uv *)",
+      "Bash(make *)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(pytest *)",
+      "Bash(ruff *)",
+      "Bash(mypy *)",
+      "Bash(curl *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(wc *)",
+      "Bash(jq *)",
+      "WebFetch(domain:senscritique.com)",
+      "WebFetch(domain:www.senscritique.com)",
+      "WebFetch(domain:old.senscritique.com)",
+      "WebFetch(domain:apollo.senscritique.com)"
+    ],
+    "deny": []
+  }
+}
