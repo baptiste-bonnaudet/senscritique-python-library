@@ -53,7 +53,8 @@ strings:
 | `tvShow` | 4          | proven by s2l contract         |
 
 The other SensCritique universes (video games, comics, albums, tracks) exist
-in the API but are not yet mapped by the library.
+in the API but are deliberately not mapped by the library yet; the full
+live-verified mapping is recorded in the repo `ROADMAP.md`.
 
 ## Operation contracts
 
