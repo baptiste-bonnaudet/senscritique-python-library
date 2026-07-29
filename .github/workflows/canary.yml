@@ -1,0 +1,67 @@
+name: Canary
+
+# Weekly live check against the real SensCritique API to catch drift in the
+# reverse-engineered GraphQL contract. On failure it opens (or updates) a
+# pinned issue; on recovery it closes it.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1" # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  ISSUE_TITLE: "Canary: live SensCritique API tests are failing"
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --locked --dev
+
+      - name: Run live integration tests
+        id: live
+        run: uv run pytest tests/integration -m integration --no-cov
+
+      - name: Open or update failure issue
+        if: failure() && steps.live.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          issue=$(gh issue list --state open --search "in:title \"$ISSUE_TITLE\"" \
+            --json number --jq '.[0].number // empty')
+          body="Live canary run failed: $RUN_URL"
+          if [ -z "$issue" ]; then
+            issue=$(gh issue create --title "$ISSUE_TITLE" --body "$body" \
+              | grep -o '[0-9]*$')
+            gh issue pin "$issue" || true
+          else
+            gh issue comment "$issue" --body "Still failing: $RUN_URL"
+          fi
+
+      - name: Close issue on recovery
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          issue=$(gh issue list --state open --search "in:title \"$ISSUE_TITLE\"" \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$issue" ]; then
+            gh issue close "$issue" --comment "Canary recovered: $RUN_URL"
+          fi
