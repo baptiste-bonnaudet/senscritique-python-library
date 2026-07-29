@@ -1,0 +1,59 @@
+{
+  "name": "pysenscritique",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  // NET_ADMIN / NET_RAW are needed only by init-firewall.sh (iptables/ipset).
+  "runArgs": [
+    "--cap-add=NET_ADMIN",
+    "--cap-add=NET_RAW"
+  ],
+  "features": {
+    // Node first: the Claude Code feature needs it and the Python base image has none.
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+  "remoteUser": "vscode",
+  "mounts": [
+    // Claude auth + settings survive rebuilds; sign in once per project container.
+    "source=pysenscritique-claude-config-${devcontainerId},target=/home/vscode/.claude,type=volume",
+    "source=pysenscritique-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
+    // uv download cache, so rebuilds don't re-download the world.
+    "source=pysenscritique-uv-cache-${devcontainerId},target=/home/vscode/.cache/uv,type=volume",
+    // Your personal skills / slash commands / subagents / global CLAUDE.md, nested
+    // inside the volume above. READ-ONLY on purpose: these execute on the host in
+    // other sessions, so a container session must not be able to rewrite them.
+    // These paths must exist on the host or the container will fail to start.
+    "source=${localEnv:HOME}/.claude/skills,target=/home/vscode/.claude/skills,type=bind,readonly",
+    "source=${localEnv:HOME}/.claude/commands,target=/home/vscode/.claude/commands,type=bind,readonly",
+    "source=${localEnv:HOME}/.claude/agents,target=/home/vscode/.claude/agents,type=bind,readonly",
+    "source=${localEnv:HOME}/.claude/CLAUDE.md,target=/home/vscode/.claude/CLAUDE.md,type=bind,readonly"
+  ],
+  "containerEnv": {
+    // Keep .claude.json (OAuth account, trust) inside the persisted volume.
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+    // Container-local venv: the bind-mounted .venv holds macOS binaries and must not be shared.
+    "UV_PROJECT_ENVIRONMENT": "/home/vscode/.venv",
+    "TZ": "America/Toronto"
+  },
+  // Firewall first, so even the initial dependency install runs under it.
+  // project-firewall.sh is the only command the vscode user may sudo.
+  "onCreateCommand": "sudo /usr/local/bin/project-firewall.sh",
+  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && make install",
+  // iptables rules live in the network namespace, so re-apply on every start.
+  "postStartCommand": "sudo /usr/local/bin/project-firewall.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "ms-python.python",
+        "ms-python.mypy-type-checker",
+        "charliermarsh.ruff"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/home/vscode/.venv/bin/python",
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      }
+    }
+  }
+}

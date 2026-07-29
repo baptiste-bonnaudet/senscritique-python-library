@@ -108,6 +108,14 @@ make test-integration  # live tests against the real API (rate-limited)
 A weekly canary workflow runs the live suite and opens a pinned issue when
 the reverse-engineered contract drifts.
 
+### Dev container
+
+`.devcontainer/` defines an isolated environment with the full toolchain and a
+default-deny egress firewall, so agent-driven sessions can run without permission
+prompts while confined to this repo and a known set of domains. Open the repo in
+VS Code and choose **Reopen in Container**. See
+[.devcontainer/README.md](.devcontainer/README.md).
+
 ## License
 
 [MIT](./LICENSE)
