@@ -20,8 +20,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/"
-Repository = "https://github.com/"
+Homepage = "https://github.com/baptiste-bonnaudet/senscritique-python-library"
+Repository = "https://github.com/baptiste-bonnaudet/senscritique-python-library"
 
 [build-system]
 requires = ["hatchling"]

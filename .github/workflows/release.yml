@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+
+      - name: Check tag matches project version
+        run: |
+          version="$(grep -m1 '^version = ' pyproject.toml | sed -E 's/^version = "(.*)"$/\1/')"
+          expected="v${version}"
+          if [ "$expected" != "$GITHUB_REF_NAME" ]; then
+            echo "Error: tag '$GITHUB_REF_NAME' does not match pyproject.toml version '$version' (expected '$expected')." >&2
+            exit 1
+          fi
+
+      - name: Build
+        run: uv build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@a892a5a61159132606e93a2fa6f4358831b04d26 # v1.14.2
+        with:
+          skip-existing: true
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes || gh release upload "$GITHUB_REF_NAME" dist/* --clobber
