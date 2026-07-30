@@ -7,26 +7,26 @@ import pytest
 
 
 def test_log_level_defaults_to_info(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("PYSENSCRITIQUE_LOG_LEVEL", raising=False)
+    monkeypatch.delenv("SENSCRITIQUE_LOG_LEVEL", raising=False)
     monkeypatch.delenv("LOG_LEVEL", raising=False)
-    from pysenscritique import config
+    from senscritique import config
 
     reloaded = importlib.reload(config)
     assert reloaded.LOG_LEVEL == logging.INFO
 
 
 def test_log_level_prefers_scoped_variable(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("PYSENSCRITIQUE_LOG_LEVEL", "ERROR")
+    monkeypatch.setenv("SENSCRITIQUE_LOG_LEVEL", "ERROR")
     monkeypatch.setenv("LOG_LEVEL", "DEBUG")
-    from pysenscritique import config
+    from senscritique import config
 
     reloaded = importlib.reload(config)
     assert reloaded.LOG_LEVEL == logging.ERROR
 
 
 def test_log_level_ignores_unknown_value(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("PYSENSCRITIQUE_LOG_LEVEL", "nonsense")
-    from pysenscritique import config
+    monkeypatch.setenv("SENSCRITIQUE_LOG_LEVEL", "nonsense")
+    from senscritique import config
 
     reloaded = importlib.reload(config)
     assert reloaded.LOG_LEVEL == logging.INFO

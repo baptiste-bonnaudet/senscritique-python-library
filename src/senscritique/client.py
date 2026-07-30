@@ -73,7 +73,7 @@ from .models import (
     WorkSummary,
 )
 
-logger = build_logger("pysenscritique.client")
+logger = build_logger("senscritique.client")
 
 DEFAULT_PAGE_SIZE = 30
 DEFAULT_SEASONS_LIMIT = 50

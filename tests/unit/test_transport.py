@@ -6,7 +6,7 @@ import httpx
 import pytest
 import respx
 
-from pysenscritique import (
+from senscritique import (
     GraphQLError,
     ParseError,
     RateLimit,
@@ -14,7 +14,7 @@ from pysenscritique import (
     RetryConfig,
     TransportError,
 )
-from pysenscritique._transport import GRAPHQL_URL, AsyncTransport, _TokenBucket
+from senscritique._transport import GRAPHQL_URL, AsyncTransport, _TokenBucket
 
 
 class FakeTime:

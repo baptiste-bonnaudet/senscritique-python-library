@@ -10,7 +10,7 @@ import httpx
 import pytest
 import respx
 
-from pysenscritique import (
+from senscritique import (
     CollectionAction,
     ParseError,
     RateLimit,
@@ -19,7 +19,7 @@ from pysenscritique import (
     Universe,
     UserNotFoundError,
 )
-from pysenscritique._transport import GRAPHQL_URL, AsyncTransport
+from senscritique._transport import GRAPHQL_URL, AsyncTransport
 
 
 def make_client() -> SensCritique:

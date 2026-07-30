@@ -2,7 +2,7 @@
   "autoMode": {
     "environment": [
       "$defaults",
-      "Trusted personal repo: pysenscritique, a read-only Python client library for the SensCritique GraphQL API",
+      "Trusted personal repo: senscritique-python-library, a read-only Python client library for the SensCritique GraphQL API",
       "Live probes against senscritique.com / apollo.senscritique.com are a normal part of development: always rate-limited, spaced out, with a browser User-Agent"
     ],
     "allow": [

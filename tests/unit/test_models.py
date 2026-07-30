@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from pysenscritique import BulkError, BulkResult, Universe, WorkSummary
+from senscritique import BulkError, BulkResult, Universe, WorkSummary
 
 
 def test_universe_api_strings() -> None:

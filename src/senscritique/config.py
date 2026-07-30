@@ -15,7 +15,7 @@ _LOG_LEVELS: dict[str, int] = {
 
 
 def _resolve_log_level() -> int:
-    raw = os.getenv("PYSENSCRITIQUE_LOG_LEVEL") or os.getenv("LOG_LEVEL") or "INFO"
+    raw = os.getenv("SENSCRITIQUE_LOG_LEVEL") or os.getenv("LOG_LEVEL") or "INFO"
     return _LOG_LEVELS.get(raw.upper(), logging.INFO)
 
 

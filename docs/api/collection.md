@@ -36,7 +36,7 @@ The collection field takes more filters the library does not send yet
 (`action: RATING, yearDateDone: 2021, order: USER_RATING_DESC`) returned
 correctly filtered results without auth.
 
-The library's trimmed query lives in `src/pysenscritique/_queries.py`
+The library's trimmed query lives in `src/senscritique/_queries.py`
 (`COLLECTION`). Works even for private profiles.
 
 ## Consumed response fields

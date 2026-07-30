@@ -1,4 +1,4 @@
-"""Exception hierarchy for pysenscritique.
+"""Exception hierarchy for senscritique.
 
 All library errors derive from :class:`SensCritiqueError` so callers can catch
 one base type. The library never calls ``exit()`` and never swallows
@@ -11,7 +11,7 @@ from typing import Any
 
 
 class SensCritiqueError(Exception):
-    """Base class for all pysenscritique errors."""
+    """Base class for all senscritique errors."""
 
 
 class TransportError(SensCritiqueError):

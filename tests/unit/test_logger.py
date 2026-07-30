@@ -2,7 +2,7 @@
 
 import logging
 
-from pysenscritique.logger import build_logger
+from senscritique.logger import build_logger
 
 
 def test_build_logger_returns_configured_logger() -> None:

@@ -6,8 +6,8 @@ import datetime
 
 import pytest
 
-from pysenscritique import CollectionAction, ParseError, Universe
-from pysenscritique._parse import (
+from senscritique import CollectionAction, ParseError, Universe
+from senscritique._parse import (
     coerce_universe,
     extract_numeric_id,
     parse_collection_item,

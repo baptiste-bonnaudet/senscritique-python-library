@@ -3,7 +3,7 @@
 Runs a private event loop in a daemon thread so a single ``httpx.AsyncClient``
 (and its rate limiter) persists across calls. Intended for scripts and the
 REPL; async consumers (e.g. the MCP server) should use
-:class:`~pysenscritique.client.SensCritique` directly.
+:class:`~senscritique.client.SensCritique` directly.
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ class SensCritiqueSync:
     ) -> None:
         self._loop = asyncio.new_event_loop()
         self._thread = threading.Thread(
-            target=self._loop.run_forever, name="pysenscritique-sync", daemon=True
+            target=self._loop.run_forever, name="senscritique-sync", daemon=True
         )
         self._thread.start()
         # The transport's httpx client must be created on the loop thread so

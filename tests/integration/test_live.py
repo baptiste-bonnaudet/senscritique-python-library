@@ -12,7 +12,7 @@ from collections.abc import AsyncIterator
 import pytest
 import pytest_asyncio
 
-from pysenscritique import (
+from senscritique import (
     CollectionAction,
     SensCritique,
     Universe,
@@ -50,7 +50,7 @@ async def test_collection_first_page(client: SensCritique) -> None:
 
 async def test_unknown_user(client: SensCritique) -> None:
     with pytest.raises(UserNotFoundError):
-        async for _ in client.collection("no_such_user_pysenscritique_x9"):
+        async for _ in client.collection("no_such_user_senscritique_x9"):
             pass
 
 

@@ -25,7 +25,7 @@ from .errors import (
 )
 from .logger import build_logger
 
-logger = build_logger("pysenscritique.transport")
+logger = build_logger("senscritique.transport")
 
 GRAPHQL_URL = "https://apollo.senscritique.com/"
 WEB_BASE_URL = "https://www.senscritique.com"

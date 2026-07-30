@@ -48,7 +48,7 @@ from .models import (
 from .sync import SensCritiqueSync
 
 try:
-    __version__ = version("pysenscritique")
+    __version__ = version("senscritique")
 except PackageNotFoundError:  # pragma: no cover - not installed
     __version__ = "0.0.0"
 

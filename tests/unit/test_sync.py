@@ -7,8 +7,8 @@ from typing import Any
 import httpx
 import respx
 
-from pysenscritique import RateLimit, RetryConfig, SensCritiqueSync, Universe
-from pysenscritique._transport import GRAPHQL_URL
+from senscritique import RateLimit, RetryConfig, SensCritiqueSync, Universe
+from senscritique._transport import GRAPHQL_URL
 
 
 def make_sync_client() -> SensCritiqueSync:

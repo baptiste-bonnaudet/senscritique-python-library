@@ -1,5 +1,5 @@
 #!/bin/bash
-# Default-deny egress firewall for the pysenscritique dev container.
+# Default-deny egress firewall for the senscritique-python-library dev container.
 # Adapted from anthropics/claude-code .devcontainer/init-firewall.sh.
 #
 # Everything outbound is blocked except:

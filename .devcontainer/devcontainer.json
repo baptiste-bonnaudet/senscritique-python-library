@@ -1,9 +1,9 @@
 {
-  "name": "pysenscritique",
+  "name": "senscritique-python-library",
   "build": {
     "dockerfile": "Dockerfile"
   },
-  // NET_ADMIN / NET_RAW are needed only by init-firewall.sh (iptables/ipset).
+  // NET_ADMIN / NET_RAW are needed only by project-firewall.sh (iptables/ipset).
   "runArgs": [
     "--cap-add=NET_ADMIN",
     "--cap-add=NET_RAW"
@@ -16,10 +16,10 @@
   "remoteUser": "vscode",
   "mounts": [
     // Claude auth + settings survive rebuilds; sign in once per project container.
-    "source=pysenscritique-claude-config-${devcontainerId},target=/home/vscode/.claude,type=volume",
-    "source=pysenscritique-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
+    "source=senscritique-python-library-claude-config-${devcontainerId},target=/home/vscode/.claude,type=volume",
+    "source=senscritique-python-library-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
     // uv download cache, so rebuilds don't re-download the world.
-    "source=pysenscritique-uv-cache-${devcontainerId},target=/home/vscode/.cache/uv,type=volume",
+    "source=senscritique-python-library-uv-cache-${devcontainerId},target=/home/vscode/.cache/uv,type=volume",
     // Your personal skills / slash commands / subagents / global CLAUDE.md, nested
     // inside the volume above. READ-ONLY on purpose: these execute on the host in
     // other sessions, so a container session must not be able to rewrite them.

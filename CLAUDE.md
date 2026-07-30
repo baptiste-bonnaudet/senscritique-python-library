@@ -1,10 +1,10 @@
-# pysenscritique
+# senscritique-python-library
 
 Async Python client library for SensCritique (senscritique.com), built on its GraphQL API. Read-only. Powers an MCP server and a local movie/TV tracker (repo `../movie-critic`).
 
 ## Context documents (read before significant work)
 
-- `docs/context/PYSENSCRITIQUE_DESIGN.md`: all design decisions (scope, auth, models, testing, rate limiting). Authoritative.
+- `docs/context/SENSCRITIQUE_PYTHON_LIBRARY_DESIGN.md`: all design decisions (scope, auth, models, testing, rate limiting). Authoritative.
 - `docs/context/SENSCRITIQUE2LETTERBOXD_CONTEXT.md`: the reverse-engineered GraphQL contract that is proven to work (endpoint, headers, variables, consumed fields).
 - `docs/context/SENSCRITIQUESCRAPER_CONTEXT.md`: architecture lessons and SensCritique domain knowledge from a prior (dead) scraper.
 
