@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     aggregate \
     jq \
     ripgrep \
+    git-lfs \
     && rm -rf /var/lib/apt/lists/*
 
 # uv, same tool as on the host.
@@ -19,8 +20,16 @@ ARG USERNAME=vscode
 # Pre-create the volume mount points so the named volumes inherit vscode ownership
 # on first mount (Docker copies ownership from the image path).
 RUN mkdir -p /home/$USERNAME/.claude /home/$USERNAME/.cache/uv /commandhistory \
+    /home/$USERNAME/.1password \
     && touch /commandhistory/.bash_history \
-    && chown -R $USERNAME:$USERNAME /home/$USERNAME/.claude /home/$USERNAME/.cache /commandhistory
+    && chown -R $USERNAME:$USERNAME /home/$USERNAME/.claude /home/$USERNAME/.cache \
+    /home/$USERNAME/.1password /commandhistory
+
+# Git identity setup, run as vscode at create time. Not sudo-able, unlike the firewall:
+# it only writes into the user's own home.
+COPY setup-git-identity.sh /usr/local/bin/setup-git-identity.sh
+RUN chmod 755 /usr/local/bin/setup-git-identity.sh \
+    && chown root:root /usr/local/bin/setup-git-identity.sh
 
 # Persist shell history in the mounted volume, and a shortcut for unattended runs.
 RUN echo 'export PROMPT_COMMAND="history -a" HISTFILE=/commandhistory/.bash_history' >> /etc/bash.bashrc \

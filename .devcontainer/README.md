@@ -21,10 +21,11 @@ and you opt into bypass by typing a different command.
 
 ## What contains what
 
-**Filesystem.** Only this repository is bind-mounted, at `/workspaces/pysenscritique`.
+**Filesystem.** Only this repository is bind-mounted, at `/workspaces/senscritique-python-library`.
 Edits appear on the host immediately, so Claude can still rewrite any file in this
-repo without asking. Nothing else on the host is reachable: no `~/.ssh`, no cloud
-credentials, no other repos. That is the main thing the container buys you.
+repo without asking. Beyond that and the read-only Claude config and git identity
+mounts described below, nothing else on the host is reachable: no cloud credentials,
+no other repos, no rest of `~/.ssh`. That is the main thing the container buys you.
 
 **Network.** [project-firewall.sh](project-firewall.sh) installs a default-deny
 egress firewall (iptables + ipset) at container create and at every start. Allowed:
@@ -69,12 +70,83 @@ Consequences worth knowing:
 Because these are host paths, all four must exist on the host or the container won't
 start. Create empty directories for any you don't have.
 
+## Git identity and signing
+
+Committing from the container needs three things the base image has none of: a name
+and email, a signing key, and an SSH key for pushing. Two mounts supply them, and
+[setup-git-identity.sh](setup-git-identity.sh) wires them up at create.
+
+- `~/.gitconfig` mounts read-only at `~/.gitconfig-host` and is pulled in with an
+  `[include]`, so name, email and your other settings stay in sync with the host.
+- 1Password's SSH agent socket is forwarded to `~/.1password/agent.sock`, exported as
+  `SSH_AUTH_SOCK`. It signs commits and authenticates pushes.
+
+**No key material enters the container.** The SSH agent protocol has two meaningful
+operations, "list public identities" and "sign this blob," and nothing that returns a
+private key, a password, or any other vault item. So a bypassed session in here can
+ask for signatures but cannot walk away with anything, and cannot reach the rest of
+your 1Password vault even in principle. That is a property of the protocol, not a
+setting you have to get right.
+
+Only one thing has to be overridden after the include (git config is last-wins):
+`gpg.ssh.program`, from 1Password's macOS-only `op-ssh-sign` to plain `ssh-keygen`.
+`user.signingkey` is inherited from the host untouched, and it being a *literal*
+public key rather than a path is exactly what routes signing through the agent: git
+passes `-U` to `ssh-keygen` for literals, meaning "find the private half in the
+agent." The container ends up configured almost identically to the host, which is the
+tell that this is the arrangement the tooling expects.
+
+The script also writes a container-local `allowed_signers` covering that key, since
+the host's copy lives at a macOS path. Without it `git log --show-signature` reports
+an unknown principal instead of a good signature.
+
+### Requirements and failure modes
+
+Socket forwarding needs Docker Desktop's **VirtioFS** backend. The older gRPC-FUSE
+cannot forward unix sockets. 1Password must also be unlocked on the host when the
+container is created, since listing identities goes through the app.
+
+The mount deliberately omits `readonly`: connecting to a unix socket requires write
+permission on the inode, and a read-only bind mount fails in a way that looks like a
+forwarding problem rather than a permissions one. It also binds the single
+`agent.sock` file rather than its parent directory, which holds ~68 other 1Password
+IPC sockets, including the CLI integration, which are nowhere near as narrow.
+
+If anything goes wrong the script disables `commit.gpgsign` and says why, so commits
+still work unsigned rather than failing outright. It distinguishes an unreachable or
+locked agent, an agent holding no keys, and an agent that does not hold the key your
+config names. That last one usually means `~/.config/1Password/ssh/agent.toml` scopes
+the agent to a vault the key isn't in. Check what the container can actually see with
+`ssh-add -L`, which prints exactly what the agent will offer and nothing more.
+
+### Fallback
+
+If your Docker Desktop can't forward the socket, comment out the agent mount in
+[devcontainer.json](devcontainer.json) and uncomment the key mount below it. That
+copies one private key to `~/.ssh/git_key` at `0600` and signs with the file directly.
+The script detects which mode it's in with no further configuration. It's the less
+safe option, because the key is then readable inside the container.
+
 ## Limits worth knowing
 
 Claude's own credentials sit in `~/.claude` inside the container, and a malicious
 repo could read them. Use this for repos you trust, which for a personal project
 means: it protects you from Claude's mistakes and from injected content in API
-responses, not from a determined supply-chain attacker. Don't mount host secrets in.
+responses, not from a determined supply-chain attacker.
+
+Signing is confined but not free of risk. Agent forwarding means the key cannot be
+stolen, so a compromised session leaves nothing durable behind once the container
+stops. What it does not prevent is misuse while the container runs: anything that
+reaches the socket can sign arbitrary commits and authenticate to GitHub as you. It is
+confinement in time, not in capability.
+
+1Password's per-use approval prompt is the only real check on that, and it gets weaker
+through a forwarded socket. The app identifies callers by peer credentials, which
+through Docker's forwarding resolve to the proxy on the host rather than to the process
+in the container. I haven't verified what the prompt renders in that case, but the
+consequence is structural: container requests are indistinguishable from each other, so
+approving and remembering grants broadly rather than to one caller. Turn off
+remembering in 1Password's developer settings if you want a tap per commit.
 
 ## Expected noise in the logs
 
