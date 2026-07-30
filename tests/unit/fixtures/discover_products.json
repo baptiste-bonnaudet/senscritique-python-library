@@ -1,0 +1,32 @@
+{
+ "data": {
+  "discoverProducts": {
+   "freshProduct": {
+    "product": {
+     "id": 133849382,
+     "title": "72 heures",
+     "originalTitle": "72 Hours",
+     "yearOfProduction": 2026,
+     "universe": 1,
+     "url": "/film/72_heures/133849382",
+     "slug": "72_heures",
+     "rating": 4.5
+    },
+    "similarProduct": null
+   },
+   "popularProduct": {
+    "product": {
+     "id": 369619,
+     "title": "Kill Bill - Volume 1",
+     "originalTitle": "Kill Bill: Vol. 1",
+     "yearOfProduction": 2003,
+     "universe": 1,
+     "url": "/film/kill_bill_volume_1/369619",
+     "slug": "kill_bill_volume_1",
+     "rating": 7.7
+    },
+    "similarProduct": null
+   }
+  }
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "data": {
+  "genreProducts": {
+   "total": 3,
+   "products": [
+    {
+     "id": 21636592,
+     "title": "Baker 3",
+     "originalTitle": null,
+     "yearOfProduction": 2005,
+     "universe": 1,
+     "url": "/film/baker_3/21636592",
+     "slug": "baker_3",
+     "rating": 8.5
+    },
+    {
+     "title": "Les Sept Samouraïs",
+     "originalTitle": "Shichinin no samurai",
+     "yearOfProduction": 1955,
+     "universe": 1,
+     "url": "/film/les_sept_samourais/451324",
+     "slug": "les_sept_samourais",
+     "rating": 8.5
+    }
+   ]
+  }
+ }
+}

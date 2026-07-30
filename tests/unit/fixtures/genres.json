@@ -1,0 +1,25 @@
+{
+ "data": {
+  "genres": [
+   {
+    "id": 8673,
+    "label": "Action"
+   },
+   {
+    "id": 14717,
+    "label": "Animalier"
+   },
+   {
+    "id": 8775,
+    "label": "Animation"
+   },
+   {
+    "id": 14713,
+    "label": "Art"
+   },
+   {
+    "label": "Broken"
+   }
+  ]
+ }
+}

@@ -1,0 +1,39 @@
+{
+ "data": {
+  "productsByRelease": {
+   "total": 3,
+   "items": [
+    {
+     "id": 109104584,
+     "title": "Hans Zimmer & Friends - Le Diamant du Désert",
+     "originalTitle": "Hans Zimmer & Friends: Diamond in the Desert",
+     "yearOfProduction": 2025,
+     "universe": 1,
+     "url": "/film/hans_zimmer_firends_le_diamant_du_desert/109104584",
+     "slug": "hans_zimmer_firends_le_diamant_du_desert",
+     "rating": 8.5
+    },
+    {
+     "id": 101488414,
+     "title": "Jeunesse (Les Tourments)",
+     "originalTitle": "Qingchun: Ku",
+     "yearOfProduction": 2025,
+     "universe": 1,
+     "url": "/film/jeunesse_les_tourments/101488414",
+     "slug": "jeunesse_les_tourments",
+     "rating": 8.1
+    },
+    {
+     "id": 104814973,
+     "title": "À 2000 mètres d’Andriivka",
+     "originalTitle": "2000 Meters to Andriivka",
+     "yearOfProduction": 2025,
+     "universe": 1,
+     "url": "/film/a_2000_metres_dandriivka/104814973",
+     "slug": "a_2000_metres_dandriivka",
+     "rating": 8
+    }
+   ]
+  }
+ }
+}

@@ -395,3 +395,253 @@ query ReviewById($id: Int!) {
 }
 """
 )
+
+GENRES = """
+query Genres($universe: String!) {
+  genres(universe: $universe) {
+    id
+    label
+  }
+}
+"""
+
+GENRE_PRODUCTS = (
+    """
+query GenreProducts(
+  $universe: String!, $genre: Int, $order: GenreSort,
+  $limit: Int!, $offset: Int!
+) {
+  genreProducts(
+    universe: $universe, genre: $genre, order: $order,
+    limit: $limit, offset: $offset
+  ) {
+    total
+    products {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+    }
+  }
+}
+"""
+)
+
+# ``year`` only narrows the results when paired with byPeriod/period (verified
+# live: without them the total stays the whole universe).
+PRODUCTS_BY_RELEASE = (
+    """
+query ProductsByRelease(
+  $universe: String!, $year: Int, $byPeriod: Boolean, $period: PeriodSort,
+  $sortBy: ProductReleaseSortBy, $limit: Int, $offset: Int
+) {
+  productsByRelease(
+    universe: $universe, year: $year, byPeriod: $byPeriod, period: $period,
+    sortBy: $sortBy, limit: $limit, offset: $offset
+  ) {
+    total
+    items {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+    }
+  }
+}
+"""
+)
+
+PRODUCTS_BY_MONTH = (
+    """
+query ProductsByMonth(
+  $universe: String!, $year: Int!, $month: Int!, $limit: Int, $offset: Int
+) {
+  productsByMonth(
+    universe: $universe, year: $year, month: $month,
+    limit: $limit, offset: $offset
+  ) {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+  }
+}
+"""
+)
+
+PRODUCTS_BY_WEEK = (
+    """
+query ProductsByWeek(
+  $universe: String!, $year: Int!, $month: Int!, $day: Int!,
+  $limit: Int, $offset: Int
+) {
+  productsByWeek(
+    universe: $universe, year: $year, month: $month, day: $day,
+    limit: $limit, offset: $offset
+  ) {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+  }
+}
+"""
+)
+
+GROUP_PRODUCTS = (
+    """
+query GroupProducts(
+  $franchiseId: Int!, $universe: String, $order: GroupSort,
+  $limit: Int, $offset: Int
+) {
+  groupProducts(
+    franchiseId: $franchiseId, universe: $universe, order: $order,
+    limit: $limit, offset: $offset
+  ) {
+    items {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+    }
+  }
+}
+"""
+)
+
+PROVIDERS = """
+query Providers {
+  providers {
+    id
+    name
+  }
+}
+"""
+
+STREAMING_EXPLORER = (
+    """
+query StreamingExplorer(
+  $subtype: String!, $providers: [Int], $genres: [Int],
+  $yearDateRelease: [Int], $rating: [Int], $countries: [Int],
+  $duration: [Int], $onlyPopular: Boolean, $order: StreamingSort,
+  $limit: Int, $offset: Int
+) {
+  streamingExplorer(
+    subtype: $subtype, providers: $providers, genres: $genres,
+    yearDateRelease: $yearDateRelease, rating: $rating, countries: $countries,
+    duration: $duration, onlyPopular: $onlyPopular, order: $order,
+    limit: $limit, offset: $offset
+  ) {
+    total
+    products {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+    }
+  }
+}
+"""
+)
+
+_DISCOVERY_PICK_FIELDS = (
+    """
+      product {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+      }
+      similarProduct {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+      }
+"""
+)
+
+DISCOVER_PRODUCTS = (
+    """
+query DiscoverProducts(
+  $universe: String!, $mood: DiscoveryMood, $type: ProductDiscoveryType,
+  $excludedProductIds: [Int!]
+) {
+  discoverProducts(
+    universe: $universe, mood: $mood, type: $type,
+    excludedProductIds: $excludedProductIds
+  ) {
+    freshProduct {
+"""
+    + _DISCOVERY_PICK_FIELDS
+    + """
+    }
+    popularProduct {
+"""
+    + _DISCOVERY_PICK_FIELDS
+    + """
+    }
+  }
+}
+"""
+)
+
+CONTACT = (
+    """
+query Contact($id: Int!) {
+  contact(id: $id) {
+    id
+    name
+    url
+    picture
+    backdrop
+    shortBio
+    profession
+    nationality
+    country
+    dateOfBirth
+    dateOfDeath
+    placeOfBirth
+    placeOfDeath
+    likeCount
+    productCount
+    productStats { universe count }
+    bestProducts {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+    }
+  }
+}
+"""
+)
+
+CONTACT_PRODUCTS = (
+    """
+query ContactProducts(
+  $id: Int!, $universe: String, $profession: String,
+  $order: ContactProductSort, $limit: Int, $offset: Int
+) {
+  contact(id: $id) {
+    productsList(
+      universe: $universe, profession: $profession, order: $order,
+      limit: $limit, offset: $offset
+    ) {
+      total
+      items {
+"""
+    + _WORK_SUMMARY_FIELDS
+    + """
+      }
+    }
+  }
+}
+"""
+)
+
+CONTACT_SEARCH = """
+query SearchContacts($query: String, $limit: Int, $offset: Int) {
+  searchContactExplorer(query: $query, limit: $limit, offset: $offset) {
+    total
+    items {
+      id
+      name
+      url
+      picture
+      profession
+    }
+  }
+}
+"""

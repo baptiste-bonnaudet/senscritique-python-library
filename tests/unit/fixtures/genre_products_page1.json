@@ -1,0 +1,29 @@
+{
+ "data": {
+  "genreProducts": {
+   "total": 3,
+   "products": [
+    {
+     "id": 105117324,
+     "title": "Terminator 2 - Le Jugement dernier (Édition Spéciale Étendue)",
+     "originalTitle": "Terminator 2 : Judgment Day - Extended Special Edition",
+     "yearOfProduction": 2000,
+     "universe": 1,
+     "url": "/film/terminator_2_le_jugement_dernier_edition_speciale_etendue/105117324",
+     "slug": "terminator_2_le_jugement_dernier_edition_speciale_etendue",
+     "rating": 9.1
+    },
+    {
+     "id": 41169272,
+     "title": "Mad Max - Fury Road : Black & Chrome Edition",
+     "originalTitle": null,
+     "yearOfProduction": null,
+     "universe": 1,
+     "url": "/film/mad_max_fury_road_black_chrome_edition/41169272",
+     "slug": "mad_max_fury_road_black_chrome_edition",
+     "rating": 8.8
+    }
+   ]
+  }
+ }
+}

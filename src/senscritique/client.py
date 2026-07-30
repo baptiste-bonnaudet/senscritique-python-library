@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Sequence
 from typing import Any
 
 import httpx
@@ -12,6 +12,10 @@ from ._parse import (
     extract_numeric_id,
     parse_autocomplete_hit,
     parse_collection_item,
+    parse_contact_details,
+    parse_contact_search_hit,
+    parse_discovery,
+    parse_genre,
     parse_list_item,
     parse_list_search_hit,
     parse_list_summary,
@@ -19,6 +23,7 @@ from ._parse import (
     parse_poll_summary,
     parse_review,
     parse_shout,
+    parse_streaming_provider,
     parse_user_profile,
     parse_user_search_hit,
     parse_work_details,
@@ -27,6 +32,13 @@ from ._parse import (
 from ._queries import (
     AUTOCOMPLETE,
     COLLECTION,
+    CONTACT,
+    CONTACT_PRODUCTS,
+    CONTACT_SEARCH,
+    DISCOVER_PRODUCTS,
+    GENRE_PRODUCTS,
+    GENRES,
+    GROUP_PRODUCTS,
     LIST_DETAILS,
     LIST_ITEMS,
     LIST_SEARCH,
@@ -34,8 +46,13 @@ from ._queries import (
     POLL_SEARCH,
     POLL_WORKS,
     POLLS,
+    PRODUCTS_BY_MONTH,
+    PRODUCTS_BY_RELEASE,
+    PRODUCTS_BY_WEEK,
+    PROVIDERS,
     REVIEW,
     SEARCH,
+    STREAMING_EXPLORER,
     TOP10_LIST,
     TOP_POLLS,
     TOPCHART,
@@ -54,16 +71,28 @@ from .models import (
     BulkResult,
     CollectionAction,
     CollectionSort,
+    ContactDetails,
+    ContactProductSort,
+    ContactSearchHit,
+    Discovery,
+    DiscoveryMood,
+    DiscoveryType,
+    Genre,
+    GenreSort,
+    GroupSort,
     ListItem,
     ListSearchHit,
     ListSummary,
     PollSearchHit,
     PollSummary,
+    ReleaseSort,
     Review,
     ReviewFilter,
     ReviewSort,
     ShoutSort,
     ShoutSummary,
+    StreamingProvider,
+    StreamingSort,
     TopChartEntry,
     Universe,
     UserCollectionItem,
@@ -448,6 +477,51 @@ class SensCritique:
                     )
                 )
         return BulkResult(items=items, errors=errors)
+
+    async def _listing_payloads(
+        self,
+        operation: str,
+        query: str,
+        variables: dict[str, Any],
+        page_size: int,
+        *,
+        root: str,
+        items_key: str | None = "items",
+        total_key: str | None = "total",
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Paginate a root listing field.
+
+        ``items_key=None`` means the root field is itself the item list;
+        ``total_key=None`` means the payload exposes no total, so iteration
+        stops on the first short page (as for ``Poll.products``).
+        """
+        offset = 0
+        while True:
+            data = await self._transport.graphql(
+                operation,
+                query,
+                {**variables, "limit": page_size, "offset": offset},
+            )
+            payload = data.get(root)
+            if payload is None:
+                return
+            total: int | None = None
+            if items_key is None:
+                items = payload if isinstance(payload, list) else []
+            else:
+                items = payload.get(items_key) or []
+                if total_key is not None:
+                    total = payload.get(total_key)
+            for item in items:
+                yield item
+            offset += len(items)
+            if not items:
+                return
+            if total is not None:
+                if offset >= total:
+                    return
+            elif len(items) < page_size:
+                return
 
     @staticmethod
     def _review_listing_variables(
@@ -851,3 +925,616 @@ class SensCritique:
                 payload=data,
             )
         return parse_review(payload)
+
+    # -- genres -------------------------------------------------------------
+
+    async def genres(
+        self, universe: Universe | str = Universe.MOVIE, *, strict: bool = False
+    ) -> list[Genre]:
+        """List a universe's genres.
+
+        Genre ids (never labels) are what :meth:`genre_products` and the
+        ``genre_id`` collection filter expect; ids differ per universe.
+        """
+        data = await self._transport.graphql(
+            "Genres", GENRES, {"universe": coerce_universe(universe).value}
+        )
+        genres: list[Genre] = []
+        for payload in data.get("genres") or []:
+            try:
+                genres.append(parse_genre(payload))
+            except ParseError as exc:
+                if strict:
+                    raise
+                logger.warning(
+                    "skipping malformed genre", extra={"error": str(exc)}
+                )
+        return genres
+
+    def _genre_product_payloads(
+        self,
+        universe: Universe | str,
+        genre_id: int | None,
+        order: GenreSort | str | None,
+        page_size: int,
+    ) -> AsyncIterator[dict[str, Any]]:
+        variables: dict[str, Any] = {"universe": coerce_universe(universe).value}
+        if genre_id is not None:
+            variables["genre"] = genre_id
+        if order is not None:
+            variables["order"] = GenreSort(order).value
+        return self._listing_payloads(
+            "GenreProducts",
+            GENRE_PRODUCTS,
+            variables,
+            page_size,
+            root="genreProducts",
+            items_key="products",
+        )
+
+    def genre_products(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        genre_id: int | None = None,
+        *,
+        order: GenreSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> AsyncIterator[WorkSummary]:
+        """Browse a universe's works, optionally narrowed to one genre.
+
+        ``genre_id`` comes from :meth:`genres`; omitting it browses the whole
+        universe.
+        """
+        payloads = self._genre_product_payloads(
+            universe, genre_id, order, page_size
+        )
+        return self._lenient_items(
+            payloads, parse_work_summary, "genre product", strict
+        )
+
+    async def genre_products_all(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        genre_id: int | None = None,
+        *,
+        order: GenreSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        """Collect a genre listing, with a structured error report.
+
+        A universe holds six figures of works; pass ``genre_id`` and expect a
+        long, rate-limited walk.
+        """
+        payloads = self._genre_product_payloads(
+            universe, genre_id, order, page_size
+        )
+        return await self._collect_items(payloads, parse_work_summary, strict)
+
+    # -- releases -----------------------------------------------------------
+
+    def _release_payloads(
+        self,
+        universe: Universe | str,
+        year: int | None,
+        sort_by: ReleaseSort | str | None,
+        page_size: int,
+    ) -> AsyncIterator[dict[str, Any]]:
+        variables: dict[str, Any] = {"universe": coerce_universe(universe).value}
+        if year is not None:
+            # The year is only honored alongside byPeriod/period (verified
+            # live: passing it alone returns the whole universe).
+            variables["year"] = year
+            variables["byPeriod"] = True
+            variables["period"] = "OUTBYYEAR"
+        if sort_by is not None:
+            variables["sortBy"] = ReleaseSort(sort_by).value
+        return self._listing_payloads(
+            "ProductsByRelease",
+            PRODUCTS_BY_RELEASE,
+            variables,
+            page_size,
+            root="productsByRelease",
+        )
+
+    def products_by_release(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        year: int | None = None,
+        sort_by: ReleaseSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> AsyncIterator[WorkSummary]:
+        """Browse a universe by release, most recent releases first.
+
+        ``year`` narrows to one release year; without it the listing spans the
+        whole universe.
+        """
+        payloads = self._release_payloads(universe, year, sort_by, page_size)
+        return self._lenient_items(payloads, parse_work_summary, "release", strict)
+
+    async def products_by_release_all(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        year: int | None = None,
+        sort_by: ReleaseSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        """Collect a release listing, with a structured error report."""
+        payloads = self._release_payloads(universe, year, sort_by, page_size)
+        return await self._collect_items(payloads, parse_work_summary, strict)
+
+    def _month_payloads(
+        self,
+        operation: str,
+        query: str,
+        root: str,
+        variables: dict[str, Any],
+        page_size: int,
+    ) -> AsyncIterator[dict[str, Any]]:
+        # Both fields return a bare product list with no total.
+        return self._listing_payloads(
+            operation,
+            query,
+            variables,
+            page_size,
+            root=root,
+            items_key=None,
+            total_key=None,
+        )
+
+    def products_by_month(
+        self,
+        year: int,
+        month: int,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> AsyncIterator[WorkSummary]:
+        """Browse the works released in one calendar month."""
+        payloads = self._month_payloads(
+            "ProductsByMonth",
+            PRODUCTS_BY_MONTH,
+            "productsByMonth",
+            {
+                "universe": coerce_universe(universe).value,
+                "year": year,
+                "month": month,
+            },
+            page_size,
+        )
+        return self._lenient_items(payloads, parse_work_summary, "release", strict)
+
+    async def products_by_month_all(
+        self,
+        year: int,
+        month: int,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        """Collect one month of releases, with a structured error report."""
+        payloads = self._month_payloads(
+            "ProductsByMonth",
+            PRODUCTS_BY_MONTH,
+            "productsByMonth",
+            {
+                "universe": coerce_universe(universe).value,
+                "year": year,
+                "month": month,
+            },
+            page_size,
+        )
+        return await self._collect_items(payloads, parse_work_summary, strict)
+
+    def products_by_day(
+        self,
+        year: int,
+        month: int,
+        day: int,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> AsyncIterator[WorkSummary]:
+        """Browse the works released on one exact date.
+
+        Backed by the API's misnamed ``productsByWeek`` field, which returns
+        a single day, not a week (verified live: 5 movies for 2025-06-04, none
+        for the day before). Most French releases land on Wednesdays.
+        """
+        payloads = self._month_payloads(
+            "ProductsByWeek",
+            PRODUCTS_BY_WEEK,
+            "productsByWeek",
+            {
+                "universe": coerce_universe(universe).value,
+                "year": year,
+                "month": month,
+                "day": day,
+            },
+            page_size,
+        )
+        return self._lenient_items(payloads, parse_work_summary, "release", strict)
+
+    async def products_by_day_all(
+        self,
+        year: int,
+        month: int,
+        day: int,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        """Collect one day of releases, with a structured error report."""
+        payloads = self._month_payloads(
+            "ProductsByWeek",
+            PRODUCTS_BY_WEEK,
+            "productsByWeek",
+            {
+                "universe": coerce_universe(universe).value,
+                "year": year,
+                "month": month,
+                "day": day,
+            },
+            page_size,
+        )
+        return await self._collect_items(payloads, parse_work_summary, strict)
+
+    # -- franchises ---------------------------------------------------------
+
+    def _group_product_payloads(
+        self,
+        franchise_id: int,
+        universe: Universe | str | None,
+        order: GroupSort | str | None,
+        page_size: int,
+    ) -> AsyncIterator[dict[str, Any]]:
+        variables: dict[str, Any] = {"franchiseId": franchise_id}
+        if universe is not None:
+            variables["universe"] = coerce_universe(universe).value
+        if order is not None:
+            variables["order"] = GroupSort(order).value
+        # GroupProducts echoes limit/offset but exposes no total.
+        return self._listing_payloads(
+            "GroupProducts",
+            GROUP_PRODUCTS,
+            variables,
+            page_size,
+            root="groupProducts",
+            total_key=None,
+        )
+
+    def group_products(
+        self,
+        franchise_id: int,
+        universe: Universe | str | None = None,
+        *,
+        order: GroupSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> AsyncIterator[WorkSummary]:
+        """Iterate over the contents of a franchise.
+
+        ``franchise_id`` is :attr:`Franchise.id` from
+        :meth:`work_details` (the ``/groupe/`` URL segment). A franchise spans
+        universes: without a ``universe`` filter, works of unmapped universes
+        (games, albums...) are skipped leniently.
+        """
+        payloads = self._group_product_payloads(
+            franchise_id, universe, order, page_size
+        )
+        return self._lenient_items(
+            payloads, parse_work_summary, "franchise product", strict
+        )
+
+    async def group_products_all(
+        self,
+        franchise_id: int,
+        universe: Universe | str | None = None,
+        *,
+        order: GroupSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        """Collect a franchise's contents, with a structured error report."""
+        payloads = self._group_product_payloads(
+            franchise_id, universe, order, page_size
+        )
+        return await self._collect_items(payloads, parse_work_summary, strict)
+
+    # -- streaming ----------------------------------------------------------
+
+    async def providers(self, *, strict: bool = False) -> list[StreamingProvider]:
+        """List the streaming services SensCritique knows about.
+
+        Ids feed :meth:`streaming_explorer` and match
+        :attr:`Provider.provider_id` on work details.
+        """
+        data = await self._transport.graphql("Providers", PROVIDERS, {})
+        providers: list[StreamingProvider] = []
+        for payload in data.get("providers") or []:
+            try:
+                providers.append(parse_streaming_provider(payload))
+            except ParseError as exc:
+                if strict:
+                    raise
+                logger.warning(
+                    "skipping malformed provider", extra={"error": str(exc)}
+                )
+        return providers
+
+    def _streaming_payloads(
+        self,
+        universe: Universe | str,
+        provider_ids: Sequence[int] | None,
+        genre_ids: Sequence[int] | None,
+        years: Sequence[int] | None,
+        ratings: Sequence[int] | None,
+        country_ids: Sequence[int] | None,
+        only_popular: bool | None,
+        order: StreamingSort | str | None,
+        page_size: int,
+    ) -> AsyncIterator[dict[str, Any]]:
+        variables: dict[str, Any] = {"subtype": coerce_universe(universe).value}
+        if provider_ids is not None:
+            variables["providers"] = list(provider_ids)
+        if genre_ids is not None:
+            variables["genres"] = list(genre_ids)
+        if years is not None:
+            variables["yearDateRelease"] = list(years)
+        if ratings is not None:
+            variables["rating"] = list(ratings)
+        if country_ids is not None:
+            variables["countries"] = list(country_ids)
+        if only_popular is not None:
+            variables["onlyPopular"] = only_popular
+        if order is not None:
+            variables["order"] = StreamingSort(order).value
+        return self._listing_payloads(
+            "StreamingExplorer",
+            STREAMING_EXPLORER,
+            variables,
+            page_size,
+            root="streamingExplorer",
+            items_key="products",
+        )
+
+    def streaming_explorer(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        provider_ids: Sequence[int] | None = None,
+        genre_ids: Sequence[int] | None = None,
+        years: Sequence[int] | None = None,
+        ratings: Sequence[int] | None = None,
+        country_ids: Sequence[int] | None = None,
+        only_popular: bool | None = None,
+        order: StreamingSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> AsyncIterator[WorkSummary]:
+        """Browse what is streaming, filtered like the site's explorer.
+
+        ``provider_ids`` come from :meth:`providers`, ``genre_ids`` from
+        :meth:`genres`; ``years`` and ``ratings`` are inclusive
+        ``[min, max]`` bounds. The API's own filter facets (countries, period)
+        and its per-user ``myProviders`` are not exposed.
+        """
+        payloads = self._streaming_payloads(
+            universe,
+            provider_ids,
+            genre_ids,
+            years,
+            ratings,
+            country_ids,
+            only_popular,
+            order,
+            page_size,
+        )
+        return self._lenient_items(
+            payloads, parse_work_summary, "streaming product", strict
+        )
+
+    async def streaming_explorer_all(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        provider_ids: Sequence[int] | None = None,
+        genre_ids: Sequence[int] | None = None,
+        years: Sequence[int] | None = None,
+        ratings: Sequence[int] | None = None,
+        country_ids: Sequence[int] | None = None,
+        only_popular: bool | None = None,
+        order: StreamingSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        """Collect a streaming listing, with a structured error report."""
+        payloads = self._streaming_payloads(
+            universe,
+            provider_ids,
+            genre_ids,
+            years,
+            ratings,
+            country_ids,
+            only_popular,
+            order,
+            page_size,
+        )
+        return await self._collect_items(payloads, parse_work_summary, strict)
+
+    # -- discovery ----------------------------------------------------------
+
+    async def discover_products(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        mood: DiscoveryMood | str | None = None,
+        type: DiscoveryType | str | None = None,
+        excluded_ids: Sequence[int] | None = None,
+    ) -> Discovery:
+        """Draw suggestions from the site's discovery roulette.
+
+        Returns the two public slots (a fresh release and a popular work);
+        the wish/recommendation slots need a session and stay ``None``. Pass
+        ``excluded_ids`` to re-draw without works already seen.
+        """
+        variables: dict[str, Any] = {"universe": coerce_universe(universe).value}
+        if mood is not None:
+            variables["mood"] = DiscoveryMood(mood).value
+        if type is not None:
+            variables["type"] = DiscoveryType(type).value
+        if excluded_ids is not None:
+            variables["excludedProductIds"] = list(excluded_ids)
+        data = await self._transport.graphql(
+            "DiscoverProducts", DISCOVER_PRODUCTS, variables
+        )
+        payload = data.get("discoverProducts")
+        if payload is None:
+            raise ParseError("no discoverProducts in response", payload=data)
+        return parse_discovery(payload)
+
+    # -- people -------------------------------------------------------------
+
+    async def contact(self, id_or_url: int | str) -> ContactDetails:
+        """Fetch a person (or company/group) by numeric id or URL.
+
+        People URLs look like ``/contact/{slug}/{id}``, as returned by
+        :meth:`autocomplete` and :meth:`search_contacts`.
+        """
+        contact_id = extract_numeric_id(id_or_url, kind="contact")
+        data = await self._transport.graphql("Contact", CONTACT, {"id": contact_id})
+        payload = data.get("contact")
+        if payload is None:
+            raise ParseError(
+                f"no contact in response for id {contact_id} (unknown id?)",
+                payload=data,
+            )
+        return parse_contact_details(payload)
+
+    async def _contact_product_payloads(
+        self,
+        contact_id: int,
+        variables: dict[str, Any],
+        page_size: int,
+    ) -> AsyncIterator[dict[str, Any]]:
+        offset = 0
+        while True:
+            data = await self._transport.graphql(
+                "ContactProducts",
+                CONTACT_PRODUCTS,
+                {
+                    **variables,
+                    "id": contact_id,
+                    "limit": page_size,
+                    "offset": offset,
+                },
+            )
+            contact = data.get("contact")
+            if contact is None:
+                raise ParseError(
+                    f"no contact in response for id {contact_id} (unknown id?)",
+                    payload=data,
+                )
+            listing = contact.get("productsList") or {}
+            total = listing.get("total") or 0
+            items = listing.get("items") or []
+            for item in items:
+                yield item
+            offset += len(items)
+            if not items or offset >= total:
+                return
+
+    @staticmethod
+    def _contact_product_variables(
+        universe: Universe | str | None,
+        profession: str | None,
+        order: ContactProductSort | str | None,
+    ) -> dict[str, Any]:
+        variables: dict[str, Any] = {}
+        if universe is not None:
+            variables["universe"] = coerce_universe(universe).value
+        if profession is not None:
+            variables["profession"] = profession
+        if order is not None:
+            variables["order"] = ContactProductSort(order).value
+        return variables
+
+    def contact_products(
+        self,
+        id_or_url: int | str,
+        universe: Universe | str | None = None,
+        *,
+        profession: str | None = None,
+        order: ContactProductSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> AsyncIterator[WorkSummary]:
+        """Iterate over the works a person is credited on.
+
+        ``profession`` is one of the raw API tags exposed as
+        :attr:`ContactDetails.professions` (``"directors"``, ``"actors"``,
+        ``"producers"``...); without it, every credit is returned.
+        """
+        payloads = self._contact_product_payloads(
+            extract_numeric_id(id_or_url, kind="contact"),
+            self._contact_product_variables(universe, profession, order),
+            page_size,
+        )
+        return self._lenient_items(
+            payloads, parse_work_summary, "contact product", strict
+        )
+
+    async def contact_products_all(
+        self,
+        id_or_url: int | str,
+        universe: Universe | str | None = None,
+        *,
+        profession: str | None = None,
+        order: ContactProductSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        """Collect a person's credits, with a structured error report."""
+        payloads = self._contact_product_payloads(
+            extract_numeric_id(id_or_url, kind="contact"),
+            self._contact_product_variables(universe, profession, order),
+            page_size,
+        )
+        return await self._collect_items(payloads, parse_work_summary, strict)
+
+    async def search_contacts(
+        self,
+        query: str,
+        *,
+        limit: int = 10,
+        offset: int = 0,
+        strict: bool = False,
+    ) -> list[ContactSearchHit]:
+        """Search people (and companies, labels, studios) by name."""
+        data = await self._transport.graphql(
+            "SearchContacts",
+            CONTACT_SEARCH,
+            {"query": query, "limit": limit, "offset": offset},
+        )
+        explorer = data.get("searchContactExplorer") or {}
+        hits: list[ContactSearchHit] = []
+        for payload in explorer.get("items") or []:
+            try:
+                hits.append(parse_contact_search_hit(payload))
+            except ParseError as exc:
+                if strict:
+                    raise
+                logger.warning(
+                    "skipping malformed contact search result",
+                    extra={"query": query, "error": str(exc)},
+                )
+        return hits

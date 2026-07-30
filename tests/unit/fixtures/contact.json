@@ -1,0 +1,83 @@
+{
+ "data": {
+  "contact": {
+   "id": 993,
+   "name": "Steven Spielberg",
+   "url": "/contact/steven_spielberg/993",
+   "picture": "https://media.senscritique.com/media/000021191530/120/steven_spielberg.png",
+   "backdrop": "https://media.senscritique.com/media/000021084843/500/steven_spielberg.jpg",
+   "shortBio": "Réalisateur, producteur et scénariste américain, né le 18 décembre 1946 à Cincinnati en Ohio.",
+   "profession": [
+    "producers",
+    "authors",
+    "developers"
+   ],
+   "nationality": [
+    "Américain"
+   ],
+   "country": [
+    "United States of America"
+   ],
+   "dateOfBirth": "1946-12-17T23:00:00.000Z",
+   "dateOfDeath": null,
+   "placeOfBirth": "Cincinnati",
+   "placeOfDeath": null,
+   "likeCount": 6166,
+   "productCount": 307,
+   "productStats": [
+    {
+     "universe": "movie",
+     "count": 215
+    },
+    {
+     "universe": "book",
+     "count": 2
+    },
+    {
+     "universe": "game",
+     "count": 2
+    },
+    {
+     "universe": "tvShow",
+     "count": 40
+    },
+    {
+     "universe": "comicBook",
+     "count": 0
+    }
+   ],
+   "bestProducts": [
+    {
+     "id": 117662,
+     "title": "Frères d'armes",
+     "originalTitle": "Band of Brothers",
+     "yearOfProduction": null,
+     "universe": 4,
+     "url": "/serie/freres_d_armes/117662",
+     "slug": "freres_d_armes",
+     "rating": 8.2
+    },
+    {
+     "id": 43486292,
+     "title": "Rencontres du troisième type : L'Édition Spéciale",
+     "originalTitle": "Close Encounters of the Third Kind: The Special Edition",
+     "yearOfProduction": 1981,
+     "universe": 1,
+     "url": "/film/rencontres_du_troisieme_type_l_edition_speciale/43486292",
+     "slug": "rencontres_du_troisieme_type_l_edition_speciale",
+     "rating": 8.1
+    },
+    {
+     "id": 422876,
+     "title": "La Liste de Schindler",
+     "originalTitle": "Schindler's List",
+     "yearOfProduction": 1994,
+     "universe": 1,
+     "url": "/film/la_liste_de_schindler/422876",
+     "slug": "la_liste_de_schindler",
+     "rating": 8.1
+    }
+   ]
+  }
+ }
+}

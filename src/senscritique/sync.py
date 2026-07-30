@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from collections.abc import AsyncIterator, Coroutine, Iterator
+from collections.abc import AsyncIterator, Coroutine, Iterator, Sequence
 from typing import Any, TypeVar
 
 import httpx
@@ -22,16 +22,28 @@ from .models import (
     BulkResult,
     CollectionAction,
     CollectionSort,
+    ContactDetails,
+    ContactProductSort,
+    ContactSearchHit,
+    Discovery,
+    DiscoveryMood,
+    DiscoveryType,
+    Genre,
+    GenreSort,
+    GroupSort,
     ListItem,
     ListSearchHit,
     ListSummary,
     PollSearchHit,
     PollSummary,
+    ReleaseSort,
     Review,
     ReviewFilter,
     ReviewSort,
     ShoutSort,
     ShoutSummary,
+    StreamingProvider,
+    StreamingSort,
     TopChartEntry,
     Universe,
     UserCollectionItem,
@@ -399,6 +411,321 @@ class SensCritiqueSync:
     ) -> list[PollSearchHit]:
         return self._call(
             self._client.search_polls(
+                query, limit=limit, offset=offset, strict=strict
+            )
+        )
+
+    def genres(
+        self, universe: Universe | str = Universe.MOVIE, *, strict: bool = False
+    ) -> list[Genre]:
+        return self._call(self._client.genres(universe, strict=strict))
+
+    def genre_products(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        genre_id: int | None = None,
+        *,
+        order: GenreSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> Iterator[WorkSummary]:
+        return self._iterate(
+            self._client.genre_products(
+                universe,
+                genre_id,
+                order=order,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def genre_products_all(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        genre_id: int | None = None,
+        *,
+        order: GenreSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        return self._call(
+            self._client.genre_products_all(
+                universe,
+                genre_id,
+                order=order,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def products_by_release(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        year: int | None = None,
+        sort_by: ReleaseSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> Iterator[WorkSummary]:
+        return self._iterate(
+            self._client.products_by_release(
+                universe,
+                year=year,
+                sort_by=sort_by,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def products_by_release_all(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        year: int | None = None,
+        sort_by: ReleaseSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        return self._call(
+            self._client.products_by_release_all(
+                universe,
+                year=year,
+                sort_by=sort_by,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def products_by_month(
+        self,
+        year: int,
+        month: int,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> Iterator[WorkSummary]:
+        return self._iterate(
+            self._client.products_by_month(
+                year, month, universe, strict=strict, page_size=page_size
+            )
+        )
+
+    def products_by_month_all(
+        self,
+        year: int,
+        month: int,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        return self._call(
+            self._client.products_by_month_all(
+                year, month, universe, strict=strict, page_size=page_size
+            )
+        )
+
+    def products_by_day(
+        self,
+        year: int,
+        month: int,
+        day: int,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> Iterator[WorkSummary]:
+        return self._iterate(
+            self._client.products_by_day(
+                year, month, day, universe, strict=strict, page_size=page_size
+            )
+        )
+
+    def products_by_day_all(
+        self,
+        year: int,
+        month: int,
+        day: int,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        return self._call(
+            self._client.products_by_day_all(
+                year, month, day, universe, strict=strict, page_size=page_size
+            )
+        )
+
+    def group_products(
+        self,
+        franchise_id: int,
+        universe: Universe | str | None = None,
+        *,
+        order: GroupSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> Iterator[WorkSummary]:
+        return self._iterate(
+            self._client.group_products(
+                franchise_id,
+                universe,
+                order=order,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def group_products_all(
+        self,
+        franchise_id: int,
+        universe: Universe | str | None = None,
+        *,
+        order: GroupSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        return self._call(
+            self._client.group_products_all(
+                franchise_id,
+                universe,
+                order=order,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def providers(self, *, strict: bool = False) -> list[StreamingProvider]:
+        return self._call(self._client.providers(strict=strict))
+
+    def streaming_explorer(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        provider_ids: Sequence[int] | None = None,
+        genre_ids: Sequence[int] | None = None,
+        years: Sequence[int] | None = None,
+        ratings: Sequence[int] | None = None,
+        country_ids: Sequence[int] | None = None,
+        only_popular: bool | None = None,
+        order: StreamingSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> Iterator[WorkSummary]:
+        return self._iterate(
+            self._client.streaming_explorer(
+                universe,
+                provider_ids=provider_ids,
+                genre_ids=genre_ids,
+                years=years,
+                ratings=ratings,
+                country_ids=country_ids,
+                only_popular=only_popular,
+                order=order,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def streaming_explorer_all(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        provider_ids: Sequence[int] | None = None,
+        genre_ids: Sequence[int] | None = None,
+        years: Sequence[int] | None = None,
+        ratings: Sequence[int] | None = None,
+        country_ids: Sequence[int] | None = None,
+        only_popular: bool | None = None,
+        order: StreamingSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        return self._call(
+            self._client.streaming_explorer_all(
+                universe,
+                provider_ids=provider_ids,
+                genre_ids=genre_ids,
+                years=years,
+                ratings=ratings,
+                country_ids=country_ids,
+                only_popular=only_popular,
+                order=order,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def discover_products(
+        self,
+        universe: Universe | str = Universe.MOVIE,
+        *,
+        mood: DiscoveryMood | str | None = None,
+        type: DiscoveryType | str | None = None,
+        excluded_ids: Sequence[int] | None = None,
+    ) -> Discovery:
+        return self._call(
+            self._client.discover_products(
+                universe, mood=mood, type=type, excluded_ids=excluded_ids
+            )
+        )
+
+    def contact(self, id_or_url: int | str) -> ContactDetails:
+        return self._call(self._client.contact(id_or_url))
+
+    def contact_products(
+        self,
+        id_or_url: int | str,
+        universe: Universe | str | None = None,
+        *,
+        profession: str | None = None,
+        order: ContactProductSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> Iterator[WorkSummary]:
+        return self._iterate(
+            self._client.contact_products(
+                id_or_url,
+                universe,
+                profession=profession,
+                order=order,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def contact_products_all(
+        self,
+        id_or_url: int | str,
+        universe: Universe | str | None = None,
+        *,
+        profession: str | None = None,
+        order: ContactProductSort | str | None = None,
+        strict: bool = False,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> BulkResult[WorkSummary]:
+        return self._call(
+            self._client.contact_products_all(
+                id_or_url,
+                universe,
+                profession=profession,
+                order=order,
+                strict=strict,
+                page_size=page_size,
+            )
+        )
+
+    def search_contacts(
+        self,
+        query: str,
+        *,
+        limit: int = 10,
+        offset: int = 0,
+        strict: bool = False,
+    ) -> list[ContactSearchHit]:
+        return self._call(
+            self._client.search_contacts(
                 query, limit=limit, offset=offset, strict=strict
             )
         )

@@ -1,0 +1,38 @@
+{
+ "data": {
+  "groupProducts": {
+   "items": [
+    {
+     "id": 73299785,
+     "title": "Dune - Troisième Partie",
+     "originalTitle": "Dune: Part Three",
+     "yearOfProduction": 2026,
+     "universe": 1,
+     "url": "/film/dune_troisieme_partie/73299785",
+     "slug": "dune_troisieme_partie",
+     "rating": null
+    },
+    {
+     "id": 50504732,
+     "title": "Dune: Awakening",
+     "originalTitle": null,
+     "yearOfProduction": 2025,
+     "universe": 3,
+     "url": "/jeuvideo/dune_awakening/50504732",
+     "slug": "dune_awakening",
+     "rating": 6.2
+    },
+    {
+     "id": 115212483,
+     "title": "Dune: Awakening (Original Game Soundtrack) (OST)",
+     "originalTitle": null,
+     "yearOfProduction": 2025,
+     "universe": 7,
+     "url": "/album/dune_awakening_original_game_soundtrack/115212483",
+     "slug": "dune_awakening_original_game_soundtrack",
+     "rating": null
+    }
+   ]
+  }
+ }
+}

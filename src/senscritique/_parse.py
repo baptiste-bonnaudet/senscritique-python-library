@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from pydantic import ValidationError
 
@@ -16,8 +17,13 @@ from .models import (
     AutocompleteHit,
     CastMember,
     CollectionAction,
+    ContactDetails,
+    ContactSearchHit,
     ContactSummary,
+    Discovery,
+    DiscoveryPick,
     Franchise,
+    Genre,
     ListItem,
     ListSearchHit,
     ListSummary,
@@ -28,6 +34,7 @@ from .models import (
     Review,
     SeasonSummary,
     ShoutSummary,
+    StreamingProvider,
     Universe,
     UserCollectionItem,
     UserProfile,
@@ -413,15 +420,20 @@ def parse_poll_search_hit(payload: dict[str, Any]) -> PollSearchHit:
         ) from exc
 
 
-def _universe_counts(entries: Any) -> dict[str, int]:
-    """``[{universe, count}]`` to a dict, dropping the ``total`` pseudo-entry."""
+def _universe_counts(entries: Any, *, drop_zero: bool = False) -> dict[str, int]:
+    """``[{universe, count}]`` to a dict, dropping the ``total`` pseudo-entry.
+
+    ``drop_zero`` also drops empty universes, which some endpoints enumerate
+    exhaustively (a person's ``productStats`` lists every internal universe).
+    """
     counts: dict[str, int] = {}
     for entry in entries or []:
         if not isinstance(entry, dict):
             continue
         universe = entry.get("universe")
-        if universe and universe != "total":
-            counts[universe] = entry.get("count") or 0
+        count = entry.get("count") or 0
+        if universe and universe != "total" and not (drop_zero and count == 0):
+            counts[universe] = count
     return counts
 
 
@@ -515,6 +527,129 @@ def parse_review(payload: dict[str, Any]) -> Review:
     except (KeyError, TypeError, ValidationError) as exc:
         raise ParseError(
             f"invalid review payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def parse_genre(payload: dict[str, Any]) -> Genre:
+    try:
+        return Genre(id=payload["id"], label=payload.get("label"))
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid genre payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def parse_streaming_provider(payload: dict[str, Any]) -> StreamingProvider:
+    try:
+        return StreamingProvider(id=payload["id"], name=payload["name"])
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid provider payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def _discovery_pick(payload: Any) -> DiscoveryPick | None:
+    if not isinstance(payload, dict):
+        return None
+    product = payload.get("product")
+    if not isinstance(product, dict):
+        return None
+    similar = payload.get("similarProduct")
+    similar_work = None
+    if isinstance(similar, dict):
+        # Auxiliary: an unmapped-universe suggestion must not kill the pick.
+        try:
+            similar_work = parse_work_summary(similar)
+        except ParseError:
+            similar_work = None
+    return DiscoveryPick(work=parse_work_summary(product), similar=similar_work)
+
+
+def parse_discovery(payload: dict[str, Any]) -> Discovery:
+    try:
+        return Discovery(
+            fresh=_discovery_pick(payload.get("freshProduct")),
+            popular=_discovery_pick(payload.get("popularProduct")),
+        )
+    except (TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid discovery payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def _strings(value: Any) -> tuple[str, ...]:
+    """A list-of-strings API field to a tuple, dropping blanks."""
+    if not isinstance(value, list):
+        return ()
+    return tuple(item for item in value if isinstance(item, str) and item)
+
+
+_PARIS = ZoneInfo("Europe/Paris")
+
+
+def parse_paris_date(value: Any) -> datetime.date | None:
+    """A birth/death instant to the Paris calendar date the API meant.
+
+    ``Contact.dateOfBirth`` is a UTC instant sitting at Paris midnight
+    (``1946-12-17T23:00:00Z`` for a 18 December birthday), so truncating the
+    string would be off by one day.
+    """
+    parsed = parse_datetime(value)
+    if parsed is None:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.date()
+    return parsed.astimezone(_PARIS).date()
+
+
+def parse_contact_details(payload: dict[str, Any]) -> ContactDetails:
+    try:
+        best = []
+        for item in payload.get("bestProducts") or []:
+            # Auxiliary data: unmapped universes are dropped, like `similar`.
+            try:
+                best.append(parse_work_summary(item))
+            except ParseError:
+                continue
+        return ContactDetails(
+            id=payload["id"],
+            name=payload["name"],
+            url=payload.get("url"),
+            picture_url=payload.get("picture"),
+            backdrop_url=payload.get("backdrop"),
+            short_bio=payload.get("shortBio"),
+            professions=_strings(payload.get("profession")),
+            nationalities=_strings(payload.get("nationality")),
+            countries=_strings(payload.get("country")),
+            date_of_birth=parse_paris_date(payload.get("dateOfBirth")),
+            date_of_death=parse_paris_date(payload.get("dateOfDeath")),
+            place_of_birth=payload.get("placeOfBirth"),
+            place_of_death=payload.get("placeOfDeath"),
+            like_count=payload.get("likeCount"),
+            product_count=payload.get("productCount"),
+            product_counts=_universe_counts(
+                payload.get("productStats"), drop_zero=True
+            ),
+            best_products=tuple(best),
+        )
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid contact details payload: {exc}", payload=_snippet(payload)
+        ) from exc
+
+
+def parse_contact_search_hit(payload: dict[str, Any]) -> ContactSearchHit:
+    try:
+        return ContactSearchHit(
+            id=payload["id"],
+            name=payload["name"],
+            url=payload.get("url"),
+            picture_url=payload.get("picture"),
+            professions=_strings(payload.get("profession")),
+        )
+    except (KeyError, TypeError, ValidationError) as exc:
+        raise ParseError(
+            f"invalid contact search payload: {exc}", payload=_snippet(payload)
         ) from exc
 
 

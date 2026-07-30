@@ -89,6 +89,99 @@ class ShoutSort(StrEnum):
     DATE_DESC = "DATE_DESC"
 
 
+class GenreSort(StrEnum):
+    """Sort order for a genre's product listing (API ``GenreSort``).
+
+    ``LAST_ACTION_DESC`` and ``MY_RATING_DESC`` are per-user and meaningless
+    without auth.
+    """
+
+    DATE_RELEASE_DESC = "DATE_RELEASE_DESC"
+    LAST_ACTION_DESC = "LAST_ACTION_DESC"
+    MY_RATING_DESC = "MY_RATING_DESC"
+    POPULARITY_DESC = "POPULARITY_DESC"
+    RATING_DESC = "RATING_DESC"
+    TITLE_ASC = "TITLE_ASC"
+
+
+class GroupSort(StrEnum):
+    """Sort order for a franchise's product listing (API ``GroupSort``).
+
+    ``LAST_ACTION_DESC`` and ``MY_RATING_DESC`` are per-user and meaningless
+    without auth.
+    """
+
+    DATE_RELEASE_DESC = "DATE_RELEASE_DESC"
+    LAST_ACTION_DESC = "LAST_ACTION_DESC"
+    MY_RATING_DESC = "MY_RATING_DESC"
+    POPULARITY_DESC = "POPULARITY_DESC"
+    RATING_DESC = "RATING_DESC"
+    TITLE_ASC = "TITLE_ASC"
+
+
+class ReleaseSort(StrEnum):
+    """Sort order for release listings (API ``ProductReleaseSortBy``)."""
+
+    POPULARITY = "POPULARITY"
+    RATING = "RATING"
+
+
+class StreamingSort(StrEnum):
+    """Sort order for the streaming explorer (API ``StreamingSort``)."""
+
+    DATE_RELEASE_DESC = "DATE_RELEASE_DESC"
+    POPULARITY_DESC = "POPULARITY_DESC"
+    RATING_DESC = "RATING_DESC"
+
+
+class ContactProductSort(StrEnum):
+    """Sort order for a person's product listing (API ``ContactProductSort``).
+
+    ``LAST_ACTION_DESC``, ``MY_RATING_DESC`` and ``SCOUT_RATING_DESC`` are
+    per-user and meaningless without auth.
+    """
+
+    DATE_OF_PRODUCTION_DESC = "DATE_OF_PRODUCTION_DESC"
+    DATE_RELEASE_DESC = "DATE_RELEASE_DESC"
+    LAST_ACTION_DESC = "LAST_ACTION_DESC"
+    MY_RATING_DESC = "MY_RATING_DESC"
+    POPULARITY_DESC = "POPULARITY_DESC"
+    RATING_DESC = "RATING_DESC"
+    SCOUT_RATING_DESC = "SCOUT_RATING_DESC"
+    TITLE_ASC = "TITLE_ASC"
+
+
+class DiscoveryMood(StrEnum):
+    """Mood filter of the discovery roulette (API ``DiscoveryMood``)."""
+
+    AMBIGUOUS = "AMBIGUOUS"
+    ANGRY = "ANGRY"
+    ANIMALS = "ANIMALS"
+    BAD_VIBES = "BAD_VIBES"
+    CHRISTMAS = "CHRISTMAS"
+    CRIME = "CRIME"
+    ENGAGED = "ENGAGED"
+    ESCAPE = "ESCAPE"
+    FEAR = "FEAR"
+    FIGHT = "FIGHT"
+    FOCUS = "FOCUS"
+    GOOD_VIBES = "GOOD_VIBES"
+    HUMOR = "HUMOR"
+    KIDS = "KIDS"
+    LOVE = "LOVE"
+    SUPERHERO = "SUPERHERO"
+    TIRED = "TIRED"
+
+
+class DiscoveryType(StrEnum):
+    """Quality bucket of the discovery roulette (API ``ProductDiscoveryType``)."""
+
+    BANGER = "BANGER"
+    DUD = "DUD"
+    GUILTY_PLEASURE = "GUILTY_PLEASURE"
+    MID = "MID"
+
+
 class WorkSummary(BaseModel):
     """A work (movie, show, book...) as it appears in list responses."""
 
@@ -116,6 +209,98 @@ class ContactSummary(BaseModel):
     id: int
     name: str
     url: str | None = None
+
+
+class ContactDetails(BaseModel):
+    """Full public profile of a person (or company/group).
+
+    ``professions`` holds the API's raw tags (``"directors"``, ``"actors"``,
+    ``"producers"``, ``"labels"``...), reusable as the ``profession`` filter of
+    :meth:`~senscritique.SensCritique.contact_products`. ``product_counts``
+    is keyed by the API universe string, zero-count universes dropped.
+
+    ``date_of_birth``/``date_of_death`` come back as UTC instants at Paris
+    midnight and are converted back to Paris calendar dates.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    name: str
+    url: str | None = None
+    picture_url: str | None = None
+    backdrop_url: str | None = None
+    short_bio: str | None = None
+    professions: tuple[str, ...] = ()
+    nationalities: tuple[str, ...] = ()
+    countries: tuple[str, ...] = ()
+    date_of_birth: datetime.date | None = None
+    date_of_death: datetime.date | None = None
+    place_of_birth: str | None = None
+    place_of_death: str | None = None
+    like_count: int | None = None
+    product_count: int | None = None
+    product_counts: dict[str, int] = {}
+    best_products: tuple[WorkSummary, ...] = ()
+
+
+class ContactSearchHit(BaseModel):
+    """One result of a people search."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    name: str
+    url: str | None = None
+    picture_url: str | None = None
+    professions: tuple[str, ...] = ()
+
+
+class Genre(BaseModel):
+    """A genre of one universe, as returned by ``genres(universe:)``.
+
+    ``id`` is what the genre listings and filters expect, never the label.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    label: str | None = None
+
+
+class StreamingProvider(BaseModel):
+    """A streaming service known to SensCritique.
+
+    Ids match :attr:`Provider.provider_id` on work details, so a work's
+    availability can be joined against this catalogue.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    id: int
+    name: str
+
+
+class DiscoveryPick(BaseModel):
+    """One suggestion of the discovery roulette."""
+
+    model_config = ConfigDict(frozen=True)
+
+    work: WorkSummary
+    similar: WorkSummary | None = None
+
+
+class Discovery(BaseModel):
+    """Public suggestions of ``discoverProducts``.
+
+    The API's ``wishedProduct`` and ``recommendedProduct`` slots need a
+    session and are always null here (see ROADMAP.md).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    fresh: DiscoveryPick | None = None
+    popular: DiscoveryPick | None = None
 
 
 class AutocompleteHit(BaseModel):

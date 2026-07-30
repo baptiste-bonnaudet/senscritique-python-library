@@ -546,3 +546,412 @@ async def test_invalid_action_rejected() -> None:
     async with make_client() as sc:
         with pytest.raises(ValueError):
             _ = [item async for item in sc.collection("vsv", action="RATED")]
+
+
+# -- browse and discovery ----------------------------------------------------
+
+
+@respx.mock
+async def test_genres(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("genres.json"))
+    async with make_client() as sc:
+        genres = await sc.genres("tvShow")
+    # The fixture's last genre has no id and is skipped leniently.
+    assert [g.id for g in genres] == [8673, 14717, 8775, 14713]
+    assert genres[0].label == "Action"
+    assert graphql_variables(route.calls[0].request)["universe"] == "tvShow"
+
+
+@respx.mock
+async def test_genres_strict_raises(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("genres.json"))
+    async with make_client() as sc:
+        with pytest.raises(ParseError):
+            await sc.genres(strict=True)
+
+
+@respx.mock
+async def test_genre_products_paginates(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.side_effect = [
+        httpx.Response(200, json=load_fixture("genre_products_page1.json")),
+        httpx.Response(200, json=load_fixture("genre_products_page2.json")),
+    ]
+    async with make_client() as sc:
+        works = [
+            work
+            async for work in sc.genre_products(
+                Universe.MOVIE, 8673, order="RATING_DESC", page_size=2
+            )
+        ]
+    # Page 2's second product is malformed (no id) and is skipped leniently.
+    assert [w.id for w in works] == [105117324, 41169272, 21636592]
+    assert works[1].year is None
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["genre"] == 8673
+    assert variables["order"] == "RATING_DESC"
+    assert variables["universe"] == "movie"
+    assert graphql_variables(route.calls[1].request)["offset"] == 2
+
+
+@respx.mock
+async def test_genre_products_strict_raises(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.side_effect = [
+        httpx.Response(200, json=load_fixture("genre_products_page1.json")),
+        httpx.Response(200, json=load_fixture("genre_products_page2.json")),
+    ]
+    async with make_client() as sc:
+        with pytest.raises(ParseError):
+            await sc.genre_products_all(page_size=2, strict=True)
+
+
+@respx.mock
+async def test_genre_products_omits_unset_filters(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.side_effect = [
+        httpx.Response(200, json=load_fixture("genre_products_page1.json")),
+        # An empty page ends the walk even when the total says otherwise.
+        httpx.Response(
+            200, json={"data": {"genreProducts": {"total": 3, "products": []}}}
+        ),
+    ]
+    async with make_client() as sc:
+        result = await sc.genre_products_all(page_size=2)
+    assert len(result.items) == 2
+    assert len(route.calls) == 2
+    variables = graphql_variables(route.calls[0].request)
+    assert "genre" not in variables
+    assert "order" not in variables
+
+
+@respx.mock
+async def test_products_by_release(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("products_by_release.json"))
+    async with make_client() as sc:
+        result = await sc.products_by_release_all(
+            year=2025, sort_by="RATING", page_size=3
+        )
+    assert len(route.calls) == 1
+    assert [w.year for w in result.items] == [2025, 2025, 2025]
+    variables = graphql_variables(route.calls[0].request)
+    # A year filter only applies alongside byPeriod/period.
+    assert variables["year"] == 2025
+    assert variables["byPeriod"] is True
+    assert variables["period"] == "OUTBYYEAR"
+    assert variables["sortBy"] == "RATING"
+
+
+@respx.mock
+async def test_products_by_release_without_year(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("products_by_release.json"))
+    async with make_client() as sc:
+        works = [
+            work
+            async for work in sc.products_by_release("book", page_size=3)
+        ]
+    assert len(works) == 3
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["universe"] == "book"
+    assert "year" not in variables
+    assert "byPeriod" not in variables
+
+
+@respx.mock
+async def test_products_by_month_stops_on_short_page(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("products_by_month.json"))
+    async with make_client() as sc:
+        works = [
+            work async for work in sc.products_by_month(2026, 6, page_size=5)
+        ]
+    # The bare product list carries no total: a short page ends the walk.
+    assert len(route.calls) == 1
+    assert len(works) == 3
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["year"] == 2026
+    assert variables["month"] == 6
+
+
+@respx.mock
+async def test_release_listings_mirror_iterator_and_collector(
+    load_fixture: Any,
+) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.side_effect = [
+        httpx.Response(200, json=load_fixture("products_by_month.json")),
+        httpx.Response(200, json=load_fixture("products_by_day.json")),
+    ]
+    async with make_client() as sc:
+        month = await sc.products_by_month_all(2026, 6, "tvShow", page_size=5)
+        week = [
+            work async for work in sc.products_by_day(2026, 6, 3, page_size=5)
+        ]
+    assert len(month.items) == 3
+    assert len(week) == 3
+    assert graphql_variables(route.calls[0].request)["universe"] == "tvShow"
+
+
+@respx.mock
+async def test_products_by_day(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("products_by_day.json"))
+    async with make_client() as sc:
+        result = await sc.products_by_day_all(2026, 6, 3, page_size=5)
+    assert [w.id for w in result.items] == [71656739, 133857629, 130626731]
+    assert result.ok
+    assert graphql_variables(route.calls[0].request)["day"] == 3
+
+
+@respx.mock
+async def test_group_products_skips_unmapped_universes(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("group_products.json"))
+    async with make_client() as sc:
+        # No total on this listing: a page shorter than page_size ends it.
+        result = await sc.group_products_all(260, page_size=5)
+    assert len(route.calls) == 1
+    # The Dune franchise spans universes; the game (3) and album (7) entries
+    # are unmapped and reported as skipped items.
+    assert [w.id for w in result.items] == [73299785]
+    assert len(result.errors) == 2
+    assert result.ok is False
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["franchiseId"] == 260
+    assert "universe" not in variables
+
+
+@respx.mock
+async def test_group_products_strict_raises(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("group_products.json"))
+    async with make_client() as sc:
+        with pytest.raises(ParseError):
+            _ = [
+                work
+                async for work in sc.group_products(
+                    260, Universe.MOVIE, order="DATE_RELEASE_DESC", strict=True
+                )
+            ]
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["universe"] == "movie"
+    assert variables["order"] == "DATE_RELEASE_DESC"
+
+
+@respx.mock
+async def test_group_products_walks_full_pages(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.side_effect = [
+        httpx.Response(200, json=load_fixture("group_products.json")),
+        httpx.Response(200, json={"data": {"groupProducts": {"items": []}}}),
+    ]
+    async with make_client() as sc:
+        works = [
+            work async for work in sc.group_products(260, page_size=3)
+        ]
+    # A full page asks for the next one; the empty page ends the walk.
+    assert len(route.calls) == 2
+    assert [w.id for w in works] == [73299785]
+    assert graphql_variables(route.calls[1].request)["offset"] == 3
+
+
+@respx.mock
+async def test_providers(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("providers.json"))
+    async with make_client() as sc:
+        providers = await sc.providers()
+    # The fixture's last provider has no name and is skipped leniently.
+    assert [(p.id, p.name) for p in providers] == [
+        (1, "Netflix"),
+        (2, "Prime Video"),
+        (3, "OCS"),
+        (4, "Canal+"),
+    ]
+
+
+@respx.mock
+async def test_providers_strict_raises(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("providers.json"))
+    async with make_client() as sc:
+        with pytest.raises(ParseError):
+            await sc.providers(strict=True)
+
+
+@respx.mock
+async def test_streaming_explorer(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("streaming_explorer.json"))
+    async with make_client() as sc:
+        works = [
+            work
+            async for work in sc.streaming_explorer(
+                provider_ids=[1],
+                genre_ids=[8673],
+                years=[1990, 2000],
+                ratings=[7, 10],
+                only_popular=True,
+                order="RATING_DESC",
+                page_size=3,
+            )
+        ]
+    assert len(works) == 3
+    assert works[0].universe is Universe.MOVIE
+    variables = graphql_variables(route.calls[0].request)
+    # The API calls the universe "subtype" here.
+    assert variables["subtype"] == "movie"
+    assert variables["providers"] == [1]
+    assert variables["genres"] == [8673]
+    assert variables["yearDateRelease"] == [1990, 2000]
+    assert variables["rating"] == [7, 10]
+    assert variables["onlyPopular"] is True
+    assert variables["order"] == "RATING_DESC"
+
+
+@respx.mock
+async def test_streaming_explorer_all(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("streaming_explorer.json"))
+    async with make_client() as sc:
+        result = await sc.streaming_explorer_all("tvShow", page_size=3)
+    assert result.ok
+    assert len(result.items) == 3
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["subtype"] == "tvShow"
+    assert "providers" not in variables
+
+
+@respx.mock
+async def test_discover_products(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("discover_products.json"))
+    async with make_client() as sc:
+        discovery = await sc.discover_products(
+            mood="GOOD_VIBES", type="BANGER", excluded_ids=[1, 2]
+        )
+    assert discovery.fresh is not None
+    assert discovery.fresh.work.id == 133849382
+    assert discovery.fresh.similar is None
+    assert discovery.popular is not None
+    assert discovery.popular.work.title == "Kill Bill - Volume 1"
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["mood"] == "GOOD_VIBES"
+    assert variables["type"] == "BANGER"
+    assert variables["excludedProductIds"] == [1, 2]
+
+
+@respx.mock
+async def test_discover_products_missing_payload() -> None:
+    respx.post(GRAPHQL_URL).respond(json={"data": {"discoverProducts": None}})
+    async with make_client() as sc:
+        with pytest.raises(ParseError):
+            await sc.discover_products()
+
+
+# -- people ------------------------------------------------------------------
+
+
+@respx.mock
+async def test_contact(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("contact.json"))
+    async with make_client() as sc:
+        contact = await sc.contact("/contact/steven_spielberg/993")
+    assert contact.id == 993
+    assert contact.name == "Steven Spielberg"
+    assert contact.professions == ("producers", "authors", "developers")
+    assert contact.nationalities == ("Américain",)
+    assert contact.countries == ("United States of America",)
+    # The API returns Paris midnight as a UTC instant; the date is the 18th.
+    assert contact.date_of_birth == datetime.date(1946, 12, 18)
+    assert contact.date_of_death is None
+    assert contact.place_of_birth == "Cincinnati"
+    assert contact.product_count == 307
+    # Zero-count universes are dropped.
+    assert contact.product_counts == {
+        "movie": 215,
+        "book": 2,
+        "game": 2,
+        "tvShow": 40,
+    }
+    assert [w.id for w in contact.best_products] == [117662, 43486292, 422876]
+    assert graphql_variables(route.calls[0].request)["id"] == 993
+
+
+@respx.mock
+async def test_contact_unknown_id() -> None:
+    respx.post(GRAPHQL_URL).respond(json={"data": {"contact": None}})
+    async with make_client() as sc:
+        with pytest.raises(ParseError, match="unknown id"):
+            await sc.contact(999999999)
+
+
+@respx.mock
+async def test_contact_products_paginates(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.side_effect = [
+        httpx.Response(200, json=load_fixture("contact_products_page1.json")),
+        httpx.Response(200, json=load_fixture("contact_products_page2.json")),
+    ]
+    async with make_client() as sc:
+        works = [
+            work
+            async for work in sc.contact_products(
+                993,
+                Universe.MOVIE,
+                profession="directors",
+                order="RATING_DESC",
+                page_size=2,
+            )
+        ]
+    # Page 2's second product is malformed (no title) and is skipped.
+    assert [w.id for w in works] == [43486292, 422876, 400170]
+    variables = graphql_variables(route.calls[0].request)
+    assert variables["universe"] == "movie"
+    assert variables["profession"] == "directors"
+    assert variables["order"] == "RATING_DESC"
+    assert graphql_variables(route.calls[1].request)["offset"] == 2
+
+
+@respx.mock
+async def test_contact_products_strict_raises(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.side_effect = [
+        httpx.Response(200, json=load_fixture("contact_products_page1.json")),
+        httpx.Response(200, json=load_fixture("contact_products_page2.json")),
+    ]
+    async with make_client() as sc:
+        with pytest.raises(ParseError):
+            await sc.contact_products_all(993, page_size=2, strict=True)
+
+
+@respx.mock
+async def test_contact_products_unknown_id() -> None:
+    respx.post(GRAPHQL_URL).respond(json={"data": {"contact": None}})
+    async with make_client() as sc:
+        with pytest.raises(ParseError, match="unknown id"):
+            await sc.contact_products_all(999999999)
+
+
+@respx.mock
+async def test_search_contacts(load_fixture: Any) -> None:
+    route = respx.post(GRAPHQL_URL)
+    route.respond(json=load_fixture("contact_search.json"))
+    async with make_client() as sc:
+        hits = await sc.search_contacts("murnau", limit=3)
+    # The fixture's last hit has no name and is skipped leniently.
+    assert [h.id for h in hits] == [6618669, 942, 4793802]
+    assert hits[1].name == "Friedrich Wilhelm Murnau"
+    assert hits[1].professions == ("directors",)
+    assert hits[1].picture_url is not None
+    assert graphql_variables(route.calls[0].request)["query"] == "murnau"
+
+
+@respx.mock
+async def test_search_contacts_strict_raises(load_fixture: Any) -> None:
+    respx.post(GRAPHQL_URL).respond(json=load_fixture("contact_search.json"))
+    async with make_client() as sc:
+        with pytest.raises(ParseError):
+            await sc.search_contacts("murnau", strict=True)

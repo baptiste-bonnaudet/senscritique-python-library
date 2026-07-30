@@ -37,15 +37,15 @@ Notes:
   and unmapped-universe `ParseError` skips (e.g. comics in autocomplete
   results) disappear on their own.
 
-## Tier 5: browse/discovery + people (not started)
+## discoverProducts: personalized slots (need auth)
 
-The last planned v0.2 tier, stopped before implementation on request:
-`genres` + `genreProducts`, `productsByRelease/Month/Week`, `groupProducts`
-(franchise contents), `streamingExplorer` + `providers()`,
-`discoverProducts`, and people (`contact(id:)`, `searchContact` /
-`searchContactExplorer`). Contract notes live in the local handoff doc.
-Also still pending from the original plan: a README API table refresh and
-one cheap live-canary call per new operation family.
+`discoverProducts` returns four suggestion slots. `freshProduct` and
+`popularProduct` work anonymously and are exposed; `wishedProduct` and
+`recommendedProduct` are always null without a session (verified live
+2026-07-29). Same story for the explorer's per-user bits:
+`streamingExplorer.myProviders` is null, and its `onlyWish`/`hideSeen`
+filters (plus `discoverProducts.hideSeen`) have nothing to act on. Revisit
+if auth support ever lands.
 
 ## listFullItemsMinimal (needs auth)
 

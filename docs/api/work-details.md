@@ -31,6 +31,9 @@ Since v0.2 the query also consumes:
 - `similarProducts { <summary fields> }`: observed empty (`[]`) on every
   probe without auth; kept because it is schema-valid and may fill in later.
 - `providers { name webUrl providerId }`: JustWatch-style streaming links.
+  `providerId` matches the ids of the root `providers` catalogue used by the
+  streaming explorer (see [browse.md](browse.md)); the two are different
+  GraphQL types despite the shared field name.
 - `vodPlatforms { platform { label } modalities { mode price quality url } }`:
   per-platform rent/buy offers (modes seen: `TVOD`, `VODEST`).
 - `numberOfSeasons` (Int, `0` for non-shows), `seasons(limit: Int)`:

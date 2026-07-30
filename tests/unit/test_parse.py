@@ -11,9 +11,15 @@ from senscritique._parse import (
     coerce_universe,
     extract_numeric_id,
     parse_collection_item,
+    parse_contact_details,
+    parse_contact_search_hit,
     parse_date,
     parse_datetime,
+    parse_discovery,
+    parse_genre,
+    parse_paris_date,
     parse_review,
+    parse_streaming_provider,
     parse_work_details,
     parse_work_summary,
     universe_from_number,
@@ -118,3 +124,81 @@ def test_extract_numeric_id() -> None:
     )
     with pytest.raises(ValueError, match="cannot extract"):
         extract_numeric_id("https://www.senscritique.com/film/l_aurore", kind="work")
+
+
+def test_parse_paris_date_shifts_back_to_the_calendar_day() -> None:
+    # The API stores birthdays as Paris midnight expressed in UTC.
+    assert parse_paris_date("1946-12-17T23:00:00.000Z") == datetime.date(
+        1946, 12, 18
+    )
+    assert parse_paris_date("1927-07-05T00:00:00.000Z") == datetime.date(1927, 7, 5)
+    assert parse_paris_date(None) is None
+    with pytest.raises(ParseError):
+        parse_paris_date("not a date")
+
+
+def test_parse_genre_and_provider_reject_bad_payloads() -> None:
+    assert parse_genre({"id": 8673, "label": None}).label is None
+    with pytest.raises(ParseError, match="invalid genre"):
+        parse_genre({"label": "Action"})
+    with pytest.raises(ParseError, match="invalid provider"):
+        parse_streaming_provider({"id": 1})
+
+
+def test_parse_contact_details_minimal() -> None:
+    contact = parse_contact_details({"id": 1, "name": "X"})
+    assert contact.professions == ()
+    assert contact.nationalities == ()
+    assert contact.date_of_birth is None
+    assert contact.product_counts == {}
+    assert contact.best_products == ()
+    with pytest.raises(ParseError, match="invalid contact details"):
+        parse_contact_details({"id": 1})
+
+
+def test_parse_contact_details_drops_unmapped_best_products() -> None:
+    contact = parse_contact_details(
+        {
+            "id": 1,
+            "name": "X",
+            "profession": ["directors", None, ""],
+            "bestProducts": [
+                {"id": 2, "title": "A movie", "universe": 1},
+                {"id": 3, "title": "An album", "universe": 7},
+            ],
+        }
+    )
+    assert contact.professions == ("directors",)
+    assert [w.id for w in contact.best_products] == [2]
+
+
+def test_parse_contact_search_hit_requires_a_name() -> None:
+    with pytest.raises(ParseError, match="invalid contact search"):
+        parse_contact_search_hit({"id": 1, "url": "/contact/x/1"})
+
+
+def test_parse_discovery_keeps_similar_and_tolerates_gaps() -> None:
+    discovery = parse_discovery(
+        {
+            "freshProduct": {
+                "product": {"id": 1, "title": "Fresh", "universe": 1},
+                "similarProduct": {"id": 2, "title": "Similar", "universe": 1},
+            },
+            "popularProduct": {
+                "product": {"id": 3, "title": "Popular", "universe": 1},
+                # An unmapped-universe suggestion must not kill the pick.
+                "similarProduct": {"id": 4, "title": "Album", "universe": 7},
+            },
+        }
+    )
+    assert discovery.fresh is not None
+    assert discovery.fresh.similar is not None
+    assert discovery.fresh.similar.id == 2
+    assert discovery.popular is not None
+    assert discovery.popular.similar is None
+
+
+def test_parse_discovery_empty_slots() -> None:
+    discovery = parse_discovery({"freshProduct": None, "popularProduct": {}})
+    assert discovery.fresh is None
+    assert discovery.popular is None

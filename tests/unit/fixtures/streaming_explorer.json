@@ -1,0 +1,39 @@
+{
+ "data": {
+  "streamingExplorer": {
+   "total": 3,
+   "products": [
+    {
+     "id": 35350301,
+     "title": "Nanette",
+     "originalTitle": null,
+     "yearOfProduction": null,
+     "universe": 1,
+     "url": "/film/nanette/35350301",
+     "slug": "nanette",
+     "rating": 8.4
+    },
+    {
+     "id": 1367079,
+     "title": "Le Voyage de Chihiro",
+     "originalTitle": "Sen to Chihiro no Kamikakushi",
+     "yearOfProduction": 2002,
+     "universe": 1,
+     "url": "/film/le_voyage_de_chihiro/1367079",
+     "slug": "le_voyage_de_chihiro",
+     "rating": 8.4
+    },
+    {
+     "id": 376627,
+     "title": "Princesse Mononoké",
+     "originalTitle": "Mononoke-hime",
+     "yearOfProduction": 2000,
+     "universe": 1,
+     "url": "/film/princesse_mononoke/376627",
+     "slug": "princesse_mononoke",
+     "rating": 8.4
+    }
+   ]
+  }
+ }
+}

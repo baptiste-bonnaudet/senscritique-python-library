@@ -40,6 +40,13 @@ approach in git history or re-run an introspection query by hand.
 - Unknown ids (product, review) return HTTP 200 with a `null` data field.
 - Unknown usernames return HTTP 200 with `data.user: null`.
 - Rate limiting exists server-side; the library defaults to 1 request / 2.5 s.
+- Exceeding it trips **Cloudflare**, not the app: HTTP 429 with a JSON body
+  carrying `error_code: 1015` / `error_name: "rate_limited"` and a
+  `Retry-After` measured in **tens of minutes** (2588 seconds observed on
+  2026-07-29 after a burst of unthrottled requests). The block is per IP and
+  applies to every operation. `RetryConfig.backoff_max` (30 s) deliberately
+  caps the wait, so the transport raises `RateLimitedError` instead of
+  sleeping it out; there is nothing to do but wait out the window.
 
 ## Universes
 
@@ -68,3 +75,8 @@ live-verified mapping is recorded in the repo `ROADMAP.md`.
 - [polls.md](polls.md): `poll(id:)`, `polls`, `topPolls`, `searchPollExplorer`
 - [topchart.md](topchart.md): `top(universe:, subtype:)`
 - [review.md](review.md): `review(id:)`
+- [browse.md](browse.md): `genres`, `genreProducts`, `productsByRelease`,
+  `productsByMonth`, `productsByWeek`, `groupProducts`, `providers`,
+  `streamingExplorer`, `discoverProducts`
+- [people.md](people.md): `contact(id:)`, `Contact.productsList`,
+  `searchContactExplorer`

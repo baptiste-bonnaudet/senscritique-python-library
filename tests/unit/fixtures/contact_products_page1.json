@@ -1,0 +1,31 @@
+{
+ "data": {
+  "contact": {
+   "productsList": {
+    "total": 3,
+    "items": [
+     {
+      "id": 43486292,
+      "title": "Rencontres du troisième type : L'Édition Spéciale",
+      "originalTitle": "Close Encounters of the Third Kind: The Special Edition",
+      "yearOfProduction": 1981,
+      "universe": 1,
+      "url": "/film/rencontres_du_troisieme_type_l_edition_speciale/43486292",
+      "slug": "rencontres_du_troisieme_type_l_edition_speciale",
+      "rating": 8.1
+     },
+     {
+      "id": 422876,
+      "title": "La Liste de Schindler",
+      "originalTitle": "Schindler's List",
+      "yearOfProduction": 1994,
+      "universe": 1,
+      "url": "/film/la_liste_de_schindler/422876",
+      "slug": "la_liste_de_schindler",
+      "rating": 8.1
+     }
+    ]
+   }
+  }
+ }
+}

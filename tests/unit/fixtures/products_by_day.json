@@ -1,0 +1,36 @@
+{
+ "data": {
+  "productsByWeek": [
+   {
+    "id": 71656739,
+    "title": "La Bataille De Gaulle - Partie 1 : L'âge de fer",
+    "originalTitle": null,
+    "yearOfProduction": 2026,
+    "universe": 1,
+    "url": "/film/la_bataille_de_gaulle_partie_1_l_age_de_fer/71656739",
+    "slug": "la_bataille_de_gaulle_partie_1_l_age_de_fer",
+    "rating": 6.9
+   },
+   {
+    "id": 133857629,
+    "title": "Saccharine",
+    "originalTitle": null,
+    "yearOfProduction": 2026,
+    "universe": 1,
+    "url": "/film/saccharine/133857629",
+    "slug": "saccharine",
+    "rating": 6.1
+   },
+   {
+    "id": 130626731,
+    "title": "Toutes mes soeurs",
+    "originalTitle": "All My Sisters",
+    "yearOfProduction": 2026,
+    "universe": 1,
+    "url": "/film/toutes_mes_soeurs/130626731",
+    "slug": "toutes_mes_soeurs",
+    "rating": 6.7
+   }
+  ]
+ }
+}

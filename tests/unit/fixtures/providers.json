@@ -1,0 +1,25 @@
+{
+ "data": {
+  "providers": [
+   {
+    "id": 1,
+    "name": "Netflix"
+   },
+   {
+    "id": 2,
+    "name": "Prime Video"
+   },
+   {
+    "id": 3,
+    "name": "OCS"
+   },
+   {
+    "id": 4,
+    "name": "Canal+"
+   },
+   {
+    "id": 999
+   }
+  ]
+ }
+}

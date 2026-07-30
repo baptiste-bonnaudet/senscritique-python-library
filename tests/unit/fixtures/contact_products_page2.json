@@ -1,0 +1,30 @@
+{
+ "data": {
+  "contact": {
+   "productsList": {
+    "total": 3,
+    "items": [
+     {
+      "id": 400170,
+      "title": "Indiana Jones et la Dernière Croisade",
+      "originalTitle": "Indiana Jones and the Last Crusade",
+      "yearOfProduction": 1989,
+      "universe": 1,
+      "url": "/film/indiana_jones_et_la_derniere_croisade/400170",
+      "slug": "indiana_jones_et_la_derniere_croisade",
+      "rating": 7.7
+     },
+     {
+      "id": 43486296,
+      "originalTitle": "Close Encounters of the Third Kind: Director's Cut",
+      "yearOfProduction": 2001,
+      "universe": 1,
+      "url": "/film/rencontres_du_troisieme_type_director_s_cut/43486296",
+      "slug": "rencontres_du_troisieme_type_director_s_cut",
+      "rating": 7.7
+     }
+    ]
+   }
+  }
+ }
+}

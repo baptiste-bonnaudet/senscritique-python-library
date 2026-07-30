@@ -1,0 +1,36 @@
+{
+ "data": {
+  "productsByMonth": [
+   {
+    "id": 127996865,
+    "title": "il manque toujours quelque chose (surtout quand on ne sait pas quoi chercher)",
+    "originalTitle": null,
+    "yearOfProduction": 2026,
+    "universe": 1,
+    "url": "/film/il_manque_toujours_quelque_chose_surtout_quand_on_ne_sait_pas_quoi_chercher/127996865",
+    "slug": "il_manque_toujours_quelque_chose_surtout_quand_on_ne_sait_pas_quoi_chercher",
+    "rating": null
+   },
+   {
+    "id": 137698277,
+    "title": "Milky Subway : L'Express galactique – Le film",
+    "originalTitle": "Milky Subway: The Galactic Limited Express to The Theater",
+    "yearOfProduction": 2026,
+    "universe": 1,
+    "url": "/film/milky_subway_l_express_galactique_le_film/137698277",
+    "slug": "milky_subway_l_express_galactique_le_film",
+    "rating": 6.3
+   },
+   {
+    "id": 108250825,
+    "title": "Loin de moi la colère",
+    "originalTitle": null,
+    "yearOfProduction": 2026,
+    "universe": 1,
+    "url": "/film/loin_de_moi_la_colere/108250825",
+    "slug": "loin_de_moi_la_colere",
+    "rating": null
+   }
+  ]
+ }
+}

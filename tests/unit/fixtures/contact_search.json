@@ -1,0 +1,40 @@
+{
+ "data": {
+  "searchContactExplorer": {
+   "total": 9,
+   "items": [
+    {
+     "id": 6618669,
+     "name": "F.W. Murnau",
+     "url": "/contact/f_w_murnau/6618669",
+     "picture": "https://media.senscritique.com/missing/212/120/missing.jpg",
+     "profession": [
+      "actors"
+     ]
+    },
+    {
+     "id": 942,
+     "name": "Friedrich Wilhelm Murnau",
+     "url": "/contact/friedrich_wilhelm_murnau/942",
+     "picture": "https://media.senscritique.com/media/000004241016/120/friedrich_wilhelm_murnau.jpg",
+     "profession": [
+      "directors"
+     ]
+    },
+    {
+     "id": 4793802,
+     "name": "Murnau Records",
+     "url": "/contact/Murnau_Records/4793802",
+     "picture": "https://media.senscritique.com/missing/212/120/missing.jpg",
+     "profession": [
+      "labels"
+     ]
+    },
+    {
+     "id": 1,
+     "url": "/x"
+    }
+   ]
+  }
+ }
+}
