@@ -16,7 +16,7 @@ classifiers = [
 dependencies = [
     "httpx>=0.28",
     "pydantic>=2.10",
-    "python-json-logger>=3.1",
+    "python-json-logger>=4.2.0",
 ]
 
 [project.urls]
@@ -32,12 +32,12 @@ packages = ["src/senscritique"]
 
 [dependency-groups]
 dev = [
-    "mypy>=1.13",
+    "mypy>=2.3.1",
     "pytest>=8.3",
     "pytest-asyncio>=0.25",
     "pytest-cov>=6.0",
     "respx>=0.22",
-    "ruff>=0.8",
+    "ruff>=0.16.3",
 ]
 
 [tool.ruff]
