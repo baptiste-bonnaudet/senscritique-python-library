@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/python:3.13-bookworm
+FROM mcr.microsoft.com/devcontainers/python:3.14-bookworm
 
 # Firewall tooling (iptables/ipset/dig/aggregate) plus basics for dev and probes.
 RUN apt-get update && apt-get install -y --no-install-recommends \
